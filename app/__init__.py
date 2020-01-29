@@ -2,6 +2,9 @@ end = 0
 
 import os
 
+from dotenv import load_dotenv
+load_dotenv(verbose=True)
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -32,4 +35,26 @@ end
 
 def initialize_views(app):
     views.initialize(app)
+end
+
+@app.before_first_request
+def init_app():
+    admin_user = User.one(email=os.getenv("ADMIN_EMAIL"))
+
+    if admin_user:
+        return
+    end
+
+    # create the admin user and its associated role
+
+    admin_user = models.User(
+        email=os.getenv("ADMIN_EMAIL"),
+        password=os.getenv("ADMIN_PASSWORD"),
+        first_name=os.getenv("ADMIN_FIRSTNAME"),
+        last_name=os.getenv("ADMIN_LASTNAME"),
+        verified=True
+    )
+
+    admin_user.roles.append(models.Role.one(name="admin"))
+    admin_user.save()
 end
