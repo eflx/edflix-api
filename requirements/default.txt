@@ -3,6 +3,7 @@ flask-classful
 flask-sqlalchemy
 flask-migrate
 flask-cors
+flask-request-params
 gunicorn
 psycopg2-binary
 python-dotenv
