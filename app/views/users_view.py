@@ -38,33 +38,33 @@ def auth_required(function):
 end
 
 class UsersView(View):
-    @route("/signup", methods=["POST"])
-    def signup(self):
-        params = request.json
+    # @route("/signup", methods=["POST"])
+    # def signup(self):
+    #     params = request.json
 
-        if not "email" in params:
-            return self.error(400, "Email is required")
-        end
+    #     if not "email" in params:
+    #         return self.error(400, "Email is required")
+    #     end
 
-        if not "password" in params:
-            return self.error(400, "Password is required")
-        end
+    #     if not "password" in params:
+    #         return self.error(400, "Password is required")
+    #     end
 
-        user = User.one(email=params["email"])
+    #     user = User.one(email=params["email"])
 
-        if user:
-            return self.error(400, f"A user with email {user.email} already exists")
-        end
+    #     if user:
+    #         return self.error(400, f"A user with email {user.email} already exists")
+    #     end
 
-        new_user = User.new(params)
-        new_user.save()
+    #     new_user = User.new(params)
+    #     new_user.save()
 
-        response = {
-            "verification": new_user.get_token()
-        }
+    #     response = {
+    #         "verification": new_user.get_token()
+    #     }
 
-        return self.render(response, status=202)
-    end
+    #     return self.render(response, status=202)
+    # end
 
     @route("/verify/<token>")
     def verify_user(self, token):
