@@ -45,12 +45,12 @@ class Model(db.Model):
         return cls(**params)
     end
 
-    def update(self, **params):
+    def update(self, params, force_save=True):
         for key in params:
             self.__setattr__(key, params[key])
         end
 
-        return self.save()
+        return self.save() if force_save else self
     end
 
     def save(self):

@@ -19,7 +19,7 @@ import jwt
 class AuthView(View):
     @route("/signup", methods=["POST"])
     def signup(self):
-        if not request.params.email:
+        if "email" not in request.params:
             return self.error(400, "Email is required")
         end
 
@@ -36,7 +36,7 @@ class AuthView(View):
         # new_user.save()
 
         #return jsonify({ "email": new_user.email, "verification_code": 197402, "is_active": new_user.is_active }), 201
-        return jsonify(request.params)
+        return jsonify(**request.params)
     end
 
     @route("/login", methods=["POST"])
