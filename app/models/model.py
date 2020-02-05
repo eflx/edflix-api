@@ -4,6 +4,11 @@ import json
 
 from app import db
 
+from sqlalchemy.orm import class_mapper
+from marshmallow import ValidationError
+
+from app.schemas import schemas
+
 class Model(db.Model):
     __abstract__ = True
 
@@ -17,7 +22,7 @@ class Model(db.Model):
     end
 
     @classmethod
-    def get(cls, id):
+    def find(cls, id):
         return cls.query.get(id)
     end
 
@@ -26,21 +31,24 @@ class Model(db.Model):
         return cls.all(**params).first()
     end
 
-    @staticmethod
-    def pick(params, attributes):
-        return { a: params.get(a) for a in attributes }
-    end
-
-    @classmethod
-    def permit(cls, params):
-        # override this in subclasses to select/validate params
-        return params
-    end
-
     @classmethod
     def new(cls, model_params, **extra_params):
-        params = cls.permit(model_params)
+        if not cls.__name__ in schemas:
+            raise Exception(f"No schema is defined for class {cls.__name__}")
+        end
+
+        params = schemas[cls.__name__].load(model_params)
         params.update(extra_params)
+
+        # filter out the params that are not part of the class model
+        # (otherwise you'll get 'xyz' is an invalid argument for cls).
+        # the params have already been validated, you can still use
+        # them in the view
+        model_attributes = class_mapper(cls).attrs.keys()
+
+        params = {
+            k: v for k, v in params.items() if k in model_attributes
+        }
 
         return cls(**params)
     end

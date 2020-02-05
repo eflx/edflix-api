@@ -9,10 +9,12 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
+from flask_marshmallow import Marshmallow
 
 db = SQLAlchemy()
 migrate = Migrate()
 cors = CORS()
+ma = Marshmallow()
 
 def create_app(config_name="development"):
     from app import models, views
@@ -31,6 +33,7 @@ def initialize_extensions(app):
     db.init_app(app)
     migrate.init_app(app, db, directory=app.config["MIGRATIONS_PATH"])
     cors.init_app(app)
+    ma.init_app(app)
 end
 
 def initialize_views(app):

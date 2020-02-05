@@ -1,31 +1,19 @@
 end = 0
 
-class ValidationError(Exception):
-    def __init__(self, message):
-        Exception.__init__(self, message)
-    end
-end
+from app import ma
 
-class Schema(object):
-    def __init__(self, many=False):
-        self.many = many
-    end
+from marshmallow import EXCLUDE
+from marshmallow import post_dump
+from marshmallow import validate
 
-    def validate_required(self, params, param, error):
-        if not param in params:
-            raise ValidationError(error)
-        end
-    end
+class Schema(ma.Schema):
+    __envelope__ = None # use in subclasses to define
+    # an envelope for wrapping a list in a namespace
 
-    def load(self, params):
-        return self.validate(params) if self.validate else params
-    end
+    unknown = EXCLUDE
 
-    def dump(self, model):
-        if not self.many:
-            return self.transform(model)
-        end
-
-        return [self.transform(m) for m in model]
+    @post_dump(pass_many=True)
+    def wrap(self, data, many, **kwargs):
+        return { self.__envelope__: data } if many and self.__envelope__ else data
     end
 end

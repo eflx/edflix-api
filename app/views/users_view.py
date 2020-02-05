@@ -9,7 +9,20 @@ from werkzeug.urls import url_parse
 
 from app.models import User
 
+from app.schemas import UserSchema
+
 from .view import View
+
+user_schema = UserSchema()
+
+def admin_required(f):
+    @wraps(f)
+    def _admin_required(*args, **kwargs):
+        return jsonify({ "code": 401, "message": "Not authorized" }), 401
+    end
+
+    return _admin_required
+end
 
 def auth_required(function):
     @wraps(function)
@@ -37,37 +50,80 @@ def auth_required(function):
     return _auth_required
 end
 
+def validate_format(f):
+    @wraps(f)
+    def inner(*args, **kwargs):
+        if not request.is_json:
+            return jsonify({ "code": 406, "message": f"Unacceptable format" }), 406
+        end
+
+        return f(*args, **kwargs)
+    end
+
+    return inner
+end
+
+def validate_params(f):
+    @wraps(f)
+    def inner(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except ValidationError as e:
+            error_message = [message for values in e.messages.values() for message in values][0]
+
+            return jsonify({ "code": 400, "message": error_message }), 400
+        end
+    end
+
+    return inner
+end
+
+
 class UsersView(View):
-    # @route("/signup", methods=["POST"])
-    # def signup(self):
-    #     params = request.json
+    @route("")
+    @admin_required
+    def index(self):
+        users = User.all()
 
-    #     if not "email" in params:
-    #         return self.error(400, "Email is required")
-    #     end
+        return user_schema.jsonify(users, many=True)
+    end
 
-    #     if not "password" in params:
-    #         return self.error(400, "Password is required")
-    #     end
+    @route("/<int:id>")
+    @admin_required
+    def get(self, id):
+        user = User.find(id)
 
-    #     user = User.one(email=params["email"])
+        if not user:
+            return self.error(404, f"User with id {id} was not found")
+        end
 
-    #     if user:
-    #         return self.error(400, f"A user with email {user.email} already exists")
-    #     end
+        return user_schema.jsonify(user)
+    end
 
-    #     new_user = User.new(params)
-    #     new_user.save()
+    @route("", methods=["POST"])
+    @validate_params
+    @validate_format
+    def post(self):
+        user = User.one(email=request.json["email"])
 
-    #     response = {
-    #         "verification": new_user.get_token()
-    #     }
+        if user:
+            return self.error(400, f"A user with email {user.email} already exists")
+        end
 
-    #     return self.render(response, status=202)
-    # end
+        # TODO: check application id to see if it is allowed
+
+        new_user = User.new(request.params)
+        new_user.save()
+
+        response = {
+            "verification": new_user.get_token()
+        }
+
+        return jsonify(response), 202
+    end
 
     @route("/verify/<token>")
-    def verify_user(self, token):
+    def verify(self, token):
         user = User.from_token(token)
 
         if not user:
@@ -81,39 +137,39 @@ class UsersView(View):
             user.save()
         end
 
-        return self.render(user.json())
+        return self.render(user_schema.dump(user))
     end
 
-    @route("/login", methods=["POST"])
-    def login(self):
-        params = request.json
+    # @route("/login", methods=["POST"])
+    # def login(self):
+    #     params = request.json
 
-        if not "email" in params:
-            return self.error(400, "Email is required")
-        end
+    #     if not "email" in params:
+    #         return self.error(400, "Email is required")
+    #     end
 
-        if not "password" in params:
-            return self.error(400, "Password is required")
-        end
+    #     if not "password" in params:
+    #         return self.error(400, "Password is required")
+    #     end
 
-        user = User.one(email=params["email"])
+    #     user = User.one(email=params["email"])
 
-        if not user:
-            return self.error(401, "Invalid email or password")
-        end
+    #     if not user:
+    #         return self.error(401, "Invalid email or password")
+    #     end
 
-        if not user.verified:
-            return self.error(401, "Please verify your email before logging in")
-        end
+    #     if not user.verified:
+    #         return self.error(401, "Please verify your email before logging in")
+    #     end
 
-        token = user.get_token()
+    #     token = user.get_token()
 
-        return self.render({ "token": token })
-    end
+    #     return self.render({ "token": token })
+    # end
 
-    @route("/profile")
-    @auth_required
-    def my_profile(self):
-        return self.render(request.user.json())
-    end
+    # @route("/profile")
+    # @auth_required
+    # def my_profile(self):
+    #     return self.render(request.user.json())
+    # end
 end

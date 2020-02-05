@@ -20,7 +20,7 @@ class User(Model):
     last_name = db.Column(db.String(32), nullable=True)
     verified = db.Column(db.Boolean, nullable=True, default=False)
     roles = db.relationship("Role", secondary="user_roles", lazy="joined", cascade="delete")
-    collections = db.relationship("Collection", backref=db.backref("user", lazy="dynamic", cascade="delete"), lazy="dynamic")
+    collections = db.relationship("Collection", backref="user", cascade="delete", lazy="dynamic")
 
     def __init__(self, **params):
         Model.__init__(self, **params)
@@ -70,26 +70,5 @@ class User(Model):
         end
 
         return User.find(id)
-    end
-
-    @staticmethod
-    def permit(params):
-        user_params = Model.pick(params, [
-            "email",
-            "password",
-            "first_name",
-            "last_name",
-            "verified"
-        ])
-
-        return user_params
-    end
-
-    def json(self):
-        return {
-            "email": self.email,
-            "first_name": self.first_name,
-            "last_name": self.last_name
-        }
     end
 end
