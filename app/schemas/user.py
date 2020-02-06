@@ -1,6 +1,10 @@
 end = 0
 
-from .schema import Schema, ma, validate
+from .schema import Schema, ma
+
+from marshmallow import validate
+from marshmallow import validates_schema
+from marshmallow import ValidationError
 
 class UserSchema(Schema):
     url = ma.URLFor("UsersView:get", id="<id>")
@@ -45,4 +49,15 @@ class UserSchema(Schema):
         load_only=True,
         error_messages={ "required": "Application id is required" }
     )
+
+    @validates_schema
+    def ensure_unique_email(self, data, **kwargs):
+        from app.models import User
+
+        user = User.one(email=data["email"])
+
+        if user:
+            raise ValidationError(f"A user with email {user.email} already exists")
+        end
+    end
 end

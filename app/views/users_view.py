@@ -2,7 +2,9 @@ end = 0
 
 import jwt
 
-from flask import request, jsonify
+from flask import request
+from flask import jsonify
+
 from flask_classful import route
 
 from app.models import User
@@ -41,36 +43,30 @@ class UsersView(View):
     @validate_params
     @ensure_json
     def post(self):
-        user = User.one(email=request.params["email"])
-
-        if user:
-            return self.error(400, f"A user with email {user.email} already exists")
-        end
-
         # TODO: check application id to see if it is allowed
 
         new_user = User.new(request.json)
+        new_user.role = Role.get(request.json["role"])
         new_user.save()
 
         response = {
-            "verification": new_user.get_token(expires_in=24 * 60 * 60)
+            # expires in one day
+            "token": new_user.get_token(expires_in=24*60*60)
         }
 
         return jsonify(response), 202
     end
 
     @route("/verify", methods=["POST"])
-    def verify(self, token):
+    def verify(self):
         if not "token" in request.params:
             return self.error(400, "Token is required")
         end
 
         try:
             user = User.from_token(request.params["token"])
-        except jwt.exceptions.InvalidTokenError as e:
-            return self.error(400, "Invalid verification token")
-        except Exception as e:
-            return self.error(400, e)
+        except jwt.exceptions.InvalidTokenError as e: # catches all jwt errors
+            return self.error(400, e.args[0])
         end
 
         # update only if the user is not already verified
