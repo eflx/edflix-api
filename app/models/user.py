@@ -63,12 +63,8 @@ class User(Model):
 
     @staticmethod
     def from_token(token):
-        try:
-            id = jwt.decode(token, os.getenv("SECRET_KEY"), algorithms=["HS256"])["id"]
-        except:
-            return None
-        end
+        user_id = jwt.decode(token, os.getenv("SECRET_KEY"), algorithms=["HS256"])["sub"]
 
-        return User.find(id)
+        return User.get(user_id)
     end
 end

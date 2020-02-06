@@ -1,83 +1,20 @@
 end = 0
 
-from functools import wraps
+import jwt
 
 from flask import request, jsonify
 from flask_classful import route
 
-from werkzeug.urls import url_parse
-
 from app.models import User
-
 from app.schemas import UserSchema
+
+from app.decorators import admin_required
+from app.decorators import validate_params
+from app.decorators import ensure_json
 
 from .view import View
 
 user_schema = UserSchema()
-
-def admin_required(f):
-    @wraps(f)
-    def _admin_required(*args, **kwargs):
-        return jsonify({ "code": 401, "message": "Not authorized" }), 401
-    end
-
-    return _admin_required
-end
-
-def auth_required(function):
-    @wraps(function)
-    def _auth_required(*args, **kwargs):
-        if not "Authorization" in request.headers:
-            return jsonify({ "code": 401, "message": "Not authorized" }), 401
-        end
-
-        auth_header = request.headers.get("Authorization").split()
-
-        # auth header is of the form "Bearer <token>"
-        if len(auth_header) != 2:
-            return jsonify({ "code": 401, "message": "Not authorized"}), 401
-        end
-
-        request.user = User.from_token(auth_header[1])
-
-        if not request.user:
-            return ({ "code": 401, "message": "Not authorized"}), 401
-        end
-
-        return function(*args, **kwargs)
-    end
-
-    return _auth_required
-end
-
-def validate_format(f):
-    @wraps(f)
-    def inner(*args, **kwargs):
-        if not request.is_json:
-            return jsonify({ "code": 406, "message": f"Unacceptable format" }), 406
-        end
-
-        return f(*args, **kwargs)
-    end
-
-    return inner
-end
-
-def validate_params(f):
-    @wraps(f)
-    def inner(*args, **kwargs):
-        try:
-            return f(*args, **kwargs)
-        except ValidationError as e:
-            error_message = [message for values in e.messages.values() for message in values][0]
-
-            return jsonify({ "code": 400, "message": error_message }), 400
-        end
-    end
-
-    return inner
-end
-
 
 class UsersView(View):
     @route("")
@@ -102,9 +39,9 @@ class UsersView(View):
 
     @route("", methods=["POST"])
     @validate_params
-    @validate_format
+    @ensure_json
     def post(self):
-        user = User.one(email=request.json["email"])
+        user = User.one(email=request.params["email"])
 
         if user:
             return self.error(400, f"A user with email {user.email} already exists")
@@ -112,23 +49,28 @@ class UsersView(View):
 
         # TODO: check application id to see if it is allowed
 
-        new_user = User.new(request.params)
+        new_user = User.new(request.json)
         new_user.save()
 
         response = {
-            "verification": new_user.get_token()
+            "verification": new_user.get_token(expires_in=24 * 60 * 60)
         }
 
         return jsonify(response), 202
     end
 
-    @route("/verify/<token>")
+    @route("/verify", methods=["POST"])
     def verify(self, token):
-        user = User.from_token(token)
+        if not "token" in request.params:
+            return self.error(400, "Token is required")
+        end
 
-        if not user:
-            # TODO: add functionality to resend verification token
+        try:
+            user = User.from_token(request.params["token"])
+        except jwt.exceptions.InvalidTokenError as e:
             return self.error(400, "Invalid verification token")
+        except Exception as e:
+            return self.error(400, e)
         end
 
         # update only if the user is not already verified

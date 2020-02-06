@@ -22,7 +22,7 @@ class Model(db.Model):
     end
 
     @classmethod
-    def find(cls, id):
+    def get(cls, id):
         return cls.query.get(id)
     end
 
@@ -73,9 +73,5 @@ class Model(db.Model):
         db.session.commit()
 
         return self
-    end
-
-    def json(self):
-        raise Exception(f"No json() function defined for class {self.__class__.__name__}")
     end
 end
