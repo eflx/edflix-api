@@ -36,12 +36,8 @@ class UserSchema(Schema):
     subjects = ma.Str(load_only=True)
 
     role = ma.Str(
-        required=True,
         load_only=True,
-        validate=validate.OneOf(["teacher"], error="Role must be 'teacher'"),
-        error_messages={
-            "required": "Role is required"
-        }
+        validate=validate.OneOf(["teacher"], error="Role must be 'teacher'")
     )
 
     application_id = ma.Str(
