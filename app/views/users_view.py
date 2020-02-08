@@ -8,6 +8,8 @@ from flask import jsonify
 from flask_classful import route
 
 from app.models import User
+from app.models import Role
+
 from app.schemas import UserSchema
 
 from app.decorators import admin_required
@@ -46,7 +48,7 @@ class UsersView(View):
         # TODO: check application id to see if it is allowed
 
         new_user = User.new(request.json)
-        new_user.role = Role.get(request.json["role"])
+        new_user.role = Role.get(request.json.get("role", "teacher"))
         new_user.save()
 
         response = {

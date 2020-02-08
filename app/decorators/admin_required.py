@@ -8,7 +8,7 @@ from flask import jsonify
 def admin_required(f):
     @wraps(f)
     def inner(*args, **kwargs):
-        return jsonify({ "code": 401, "message": "Not authorized" }), 401
+        return jsonify({ "code": 401, "message": "Unauthorized" }), 401
     end
 
     return inner

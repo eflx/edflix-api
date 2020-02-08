@@ -23,13 +23,29 @@ def test_create_new_user(api):
         "first_name": "Pomona",
         "last_name": "Sprout",
         "email": "pomona.sprout@hogwarts.edu",
-        "password": "P@55w0rd"
+        "password": "P@55w0rd",
+        "application_id": "xyz"
     }
 
     response_data, status = api.post("users", data=data)
 
     assert(status == 202)
     assert("token" in response_data)
+end
+
+def test_create_existing_user(api):
+    data = {
+        "first_name": "Albus",
+        "last_name": "Dumbledore",
+        "email": "albus.dumbledore@hogwarts.edu",
+        "password": "P@55w0rd",
+        "application_id": "xyz"
+    }
+
+    response_data, status = api.post("users", data=data)
+
+    assert(status == 400)
+    assert("exists" in response_data["message"][0])
 end
 
 incomplete_user_data = [
@@ -47,7 +63,7 @@ def test_create_user_with_missing_required_field(api, user_data):
 
     assert(status == 400)
     assert(error_data["code"] == 400)
-    assert("required" in error_data["message"])
+    assert("required" in error_data["message"][0])
 end
 
 # def test_add_new_book_to_user(api):
