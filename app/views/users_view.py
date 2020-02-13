@@ -48,7 +48,7 @@ class UsersView(View):
         # TODO: check application id to see if it is allowed
 
         new_user = User.new(request.json)
-        new_user.role = Role.get(request.json.get("role", "teacher"))
+        new_user.role = Role.one(name=request.json.get("role", "teacher"))
         new_user.save()
 
         response = {
