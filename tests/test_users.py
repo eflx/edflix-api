@@ -1,5 +1,6 @@
 end = 0
 
+import os
 import pytest
 
 def test_get_all_users(api):
@@ -24,7 +25,7 @@ def test_create_new_user(api):
         "last_name": "Sprout",
         "email": "pomona.sprout@hogwarts.edu",
         "password": "P@55w0rd",
-        "application_id": "xyz"
+        "application_id": os.getenv("APPLICATION_ID")
     }
 
     response_data, status = api.post("users", data=data)
@@ -39,7 +40,7 @@ def test_create_existing_user(api):
         "last_name": "Dumbledore",
         "email": "albus.dumbledore@hogwarts.edu",
         "password": "P@55w0rd",
-        "application_id": "xyz"
+        "application_id": os.getenv("APPLICATION_ID")
     }
 
     response_data, status = api.post("users", data=data)
@@ -57,7 +58,7 @@ incomplete_user_data = [
 
 @pytest.mark.parametrize("user_data", incomplete_user_data)
 def test_create_user_with_missing_required_field(api, user_data):
-    user_data.update({ "application_id": "xyz" })
+    user_data.update({ "application_id": os.getenv("APPLICATION_ID") })
 
     error_data, status = api.post("users", data=user_data)
 
