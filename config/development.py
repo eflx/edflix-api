@@ -1,5 +1,3 @@
-import os
-
 from .default import *
 
 DEBUG = True
