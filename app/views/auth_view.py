@@ -19,7 +19,7 @@ import jwt
 class AuthView(View):
     @route("/signup", methods=["POST"])
     def signup(self):
-        if "email" not in request.params:
+        if "email" not in request.json:
             return self.error(400, "Email is required")
         end
 

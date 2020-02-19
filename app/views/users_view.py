@@ -60,13 +60,14 @@ class UsersView(View):
     end
 
     @route("/verify", methods=["POST"])
+    @ensure_json
     def verify(self):
-        if not "token" in request.params:
+        if not "token" in request.json:
             return self.error(400, "Token is required")
         end
 
         try:
-            user = User.from_token(request.params["token"])
+            user = User.from_token(request.json["token"])
         except jwt.exceptions.InvalidTokenError as e: # catches all jwt errors
             return self.error(400, e.args[0])
         end
