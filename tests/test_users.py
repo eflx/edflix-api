@@ -134,7 +134,7 @@ def test_user_verification_without_token(api):
 end
 
 def test_user_verification_with_valid_token(api):
-    # test with dummy token -- all we're testing for
+    # test with dummy valid token -- all we're testing for
     # right now is that there *is* a token in the payload
     payload = {
         "sub": 1, # dumbledore user, id=1
@@ -152,6 +152,16 @@ def test_user_verification_with_valid_token(api):
 
     assert(status == 200)
     assert(user_data["email"] == "albus.dumbledore@hogwarts.edu")
+end
+
+def test_user_verification_with_invalid_token(api):
+    data = {
+        "token": "dummytoken"
+    }
+
+    user_data, status = api.post("users/verify", data=data)
+
+    assert(status == 400)
 end
 
 def test_login(api):
@@ -198,7 +208,20 @@ def test_login_with_missing_fields(api, required_field):
     assert("required" in error_data["message"])
 end
 
-# TODO: Add test for logging in with incorrect credentials
-# def test_login_with_incorrect_credentials(api):
-#     pass
-# end
+@pytest.mark.parametrize("required_field", required_fields_for_login)
+def test_login_with_incorrect_credentials(api, required_field):
+    login_data = {
+        "email": "albus.dumbledore@hogwarts.edu",
+        "password": "P@55w0rd"
+    }
+
+    # mess up the required field, turn it into an incorrect
+    # value
+    login_data[required_field] = login_data[required_field] + "x"
+
+    error_data, status = api.post("auth/token", data=login_data)
+
+    assert(status == 400)
+    assert(error_data["code"] == 400)
+    assert("incorrect" in error_data["message"])
+end
