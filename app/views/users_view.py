@@ -53,13 +53,14 @@ class UsersView(View):
 
         response = {
             # expires in one day
-            "token": new_user.get_token(expires_in=24*60*60)
+            "token": new_user.get_verification_token(expires_in=24*60*60)
         }
 
         return jsonify(response), 202
     end
 
     @route("/verify", methods=["POST"])
+    @ensure_json
     def verify(self):
         if not "token" in request.params:
             return self.error(400, "Token is required")
@@ -79,37 +80,4 @@ class UsersView(View):
 
         return self.render(user_schema.dump(user))
     end
-
-    # @route("/login", methods=["POST"])
-    # def login(self):
-    #     params = request.json
-
-    #     if not "email" in params:
-    #         return self.error(400, "Email is required")
-    #     end
-
-    #     if not "password" in params:
-    #         return self.error(400, "Password is required")
-    #     end
-
-    #     user = User.one(email=params["email"])
-
-    #     if not user:
-    #         return self.error(401, "Invalid email or password")
-    #     end
-
-    #     if not user.verified:
-    #         return self.error(401, "Please verify your email before logging in")
-    #     end
-
-    #     token = user.get_token()
-
-    #     return self.render({ "token": token })
-    # end
-
-    # @route("/profile")
-    # @auth_required
-    # def my_profile(self):
-    #     return self.render(request.user.json())
-    # end
 end

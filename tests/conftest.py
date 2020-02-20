@@ -50,6 +50,8 @@ def init_db():
         teacher.roles.append(teacher_role)
     end
 
+    dumbledore.roles.append(school_admin_role)
+
     for teacher in [dumbledore, mcgonagall, flitwick]:
         teacher.save()
     end

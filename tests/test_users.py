@@ -1,7 +1,10 @@
 end = 0
 
 import os
+import jwt
 import pytest
+
+from time import time
 
 def test_get_all_users(api):
     error_data, status = api.get("users")
@@ -65,6 +68,36 @@ def test_create_user_with_missing_required_field(api, user_data):
     assert(status == 400)
     assert(error_data["code"] == 400)
     assert("required" in error_data["message"][0])
+end
+
+def test_user_verification_without_token(api):
+    data = {}
+
+    error_data, status = api.post("users", data=data)
+
+    assert(status == 400)
+    assert("required" in error_data["message"][0])
+end
+
+def test_user_verification_with_valid_token(api):
+    # test with dummy token -- all we're testing for
+    # right now is that there *is* a token in the payload
+    payload = {
+        "sub": 1, # dumbledore user, id=1
+        "iat": time(),
+        "exp": time() + 1*60 # 24 hours for a real user; 1 min for testing
+    }
+
+    token = jwt.encode(payload, os.getenv("SECRET_KEY"), algorithm="HS256").decode("UTF-8")
+
+    data = {
+        "token": token
+    }
+
+    user_data, status = api.post("users/verify", data=data)
+
+    assert(status == 200)
+    assert(user_data["email"] == "albus.dumbledore@hogwarts.edu")
 end
 
 # def test_add_new_book_to_user(api):

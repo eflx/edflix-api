@@ -56,4 +56,9 @@ class UserSchema(Schema):
             raise ValidationError(f"A user with email {user.email} already exists")
         end
     end
+
+    @validates_schema
+    def validate_role(self, data, **kwargs):
+        pass
+    end
 end
