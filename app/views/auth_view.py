@@ -12,12 +12,17 @@ from flask_classful import route
 
 from app.schemas import AuthSchema
 
-auth_schema = AuthSchema()
+from app.decorators import validate_params
+from app.decorators import ensure_json
 
 from .view import View
 
+auth_schema = AuthSchema()
+
 class AuthView(View):
     @route("/token", methods=["POST"])
+    @validate_params
+    @ensure_json
     def token(self):
         auth_params = auth_schema.load(request.json)
 
@@ -27,11 +32,11 @@ class AuthView(View):
             return self.error(400, "The email or password is incorrect")
         end
 
-        token = user.get_auth_token()
+        response = {
+            "token": user.get_auth_token(),
+            "email": user.email
+        }
 
-        response = make_response({}, 200)
-        response.headers["Authorization"] = f"Bearer {token}"
-
-        return response
+        return jsonify(response), 200
     end
 end

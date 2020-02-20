@@ -51,7 +51,7 @@ class User(Model):
         return f"User ({self.email})"
     end
 
-    def get_verification_token(self, expires_in=600):
+    def get_token(self, expires_in=600):
         payload = {
             "sub": self.id,
             "iat": time(),
@@ -61,16 +61,12 @@ class User(Model):
         return jwt.encode(payload, os.getenv("SECRET_KEY"), algorithm="HS256").decode("UTF-8")
     end
 
-    def get_auth_token(self):
-        # no expiration for this token; it will
-        # exist on the client until the user
-        # logs out
-        payload = {
-            "sub": self.id,
-            "iat": time()
-        }
+    def get_verification_token(self, expires_in=600):
+        return self.get_token(expires_in=expires_in)
+    end
 
-        return jwt.encode(payload, os.getenv("SECRET_KEY"), algorithm="HS256").decode("UTF-8")
+    def get_auth_token(self, expires_in=10*24*60*60):
+        return self.get_token(expires_in=expires_in)
     end
 
     @staticmethod
