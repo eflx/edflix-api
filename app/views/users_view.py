@@ -47,13 +47,17 @@ class UsersView(View):
     def post(self):
         # TODO: check application id to see if it is allowed
 
+        role = Role.one(name=request.json.get("role", "teacher"))
+
         new_user = User.new(request.json)
-        new_user.role = Role.one(name=request.json.get("role", "teacher"))
+        new_user.roles.append(role)
         new_user.save()
 
         response = {
             # expires in one day
-            "token": new_user.get_token(expires_in=24*60*60)
+            "token": new_user.get_verification_token(expires_in=24*60*60),
+            "email": new_user.email,
+            "roles": list(map(lambda role: role.name, new_user.roles))
         }
 
         return jsonify(response), 202
@@ -80,37 +84,4 @@ class UsersView(View):
 
         return self.render(user_schema.dump(user))
     end
-
-    # @route("/login", methods=["POST"])
-    # def login(self):
-    #     params = request.json
-
-    #     if not "email" in params:
-    #         return self.error(400, "Email is required")
-    #     end
-
-    #     if not "password" in params:
-    #         return self.error(400, "Password is required")
-    #     end
-
-    #     user = User.one(email=params["email"])
-
-    #     if not user:
-    #         return self.error(401, "Invalid email or password")
-    #     end
-
-    #     if not user.verified:
-    #         return self.error(401, "Please verify your email before logging in")
-    #     end
-
-    #     token = user.get_token()
-
-    #     return self.render({ "token": token })
-    # end
-
-    # @route("/profile")
-    # @auth_required
-    # def my_profile(self):
-    #     return self.render(request.user.json())
-    # end
 end

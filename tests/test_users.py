@@ -1,7 +1,10 @@
 end = 0
 
 import os
+import jwt
 import pytest
+
+from time import time
 
 def test_get_all_users(api):
     error_data, status = api.get("users")
@@ -19,140 +22,206 @@ def test_get_one_user(api):
     assert("Unauthorized" in error_data["message"])
 end
 
-def test_create_new_user(api):
-    data = {
+def test_signup_new_teacher(api):
+    teacher_data = {
         "first_name": "Pomona",
         "last_name": "Sprout",
         "email": "pomona.sprout@hogwarts.edu",
         "password": "P@55w0rd",
+        "role": "teacher",
         "application_id": os.getenv("APPLICATION_ID")
     }
 
-    response_data, status = api.post("users", data=data)
+    response_data, status = api.post("users", data=teacher_data)
 
     assert(status == 202)
+    assert("email" in response_data)
     assert("token" in response_data)
+    assert("roles" in response_data)
+    assert("teacher" in response_data["roles"])
 end
 
-def test_create_existing_user(api):
-    data = {
+def test_signup_existing_teacher(api):
+    teacher_data = {
         "first_name": "Albus",
         "last_name": "Dumbledore",
         "email": "albus.dumbledore@hogwarts.edu",
         "password": "P@55w0rd",
+        "role": "teacher",
         "application_id": os.getenv("APPLICATION_ID")
     }
 
-    response_data, status = api.post("users", data=data)
+    response_data, status = api.post("users", data=teacher_data)
 
     assert(status == 400)
-    assert("exists" in response_data["message"][0])
+    assert("exists" in response_data["message"])
 end
 
-incomplete_user_data = [
-    { "last_name": "Snape", "email": "severus.snape@hogwars.edu", "password": "P@55w0rd" },
-    { "first_name": "Severus", "email": "severus.snape@hogwars.edu", "password": "P@55w0rd" },
-    { "first_name": "Severus", "last_name": "Snape", "password": "P@55w0rd" },
-    { "first_name": "Severus", "last_name": "Snape", "email": "severus.snape@hogwars.edu" }
-]
+required_fields_for_teacher_signup = ["first_name", "last_name", "email", "password", "application_id"]
 
-@pytest.mark.parametrize("user_data", incomplete_user_data)
-def test_create_user_with_missing_required_field(api, user_data):
-    user_data.update({ "application_id": os.getenv("APPLICATION_ID") })
+@pytest.mark.parametrize("required_field", required_fields_for_teacher_signup)
+def test_signup_teacher_with_missing_required_field(api, required_field):
+    teacher_data = {
+        "first_name": "Severus",
+        "last_name": "Snape",
+        "email": "severus.snape@hogwarts.edu",
+        "password": "P@55w0rd",
+        "role": "teacher",
+        "application_id": os.getenv("APPLICATION_ID")
+    }
 
-    error_data, status = api.post("users", data=user_data)
+    del teacher_data[required_field]
+
+    error_data, status = api.post("users", data=teacher_data)
 
     assert(status == 400)
     assert(error_data["code"] == 400)
-    assert("required" in error_data["message"][0])
+    assert("required" in error_data["message"])
 end
 
-# def test_add_new_book_to_user(api):
-#     data = {
-#         "title": "Harry Potter and the Goblet of Fire"
-#     }
+def test_signup_school_admin(api):
+    admin_data = {
+        "first_name": "Remus",
+        "last_name": "Lupin",
+        "email": "remus.lupin@hogwarts.edu",
+        "password": "P@55w0rd",
+        "role": "school-admin",
+        "school_name": "Hogwarts",
+        "school_address": "Scotland",
+        "application_id": os.getenv("APPLICATION_ID")
+    }
 
-#     book_data, status = api.post("users/1/books", data=data)
+    response_data, status = api.post("users", data=admin_data)
 
-#     assert(status == 201)
-#     assert(book_data["title"] == "Harry Potter and the Goblet of Fire")
-#     assert(book_data["is_read"] == False)
-# end
+    assert(status == 202)
+    assert("email" in response_data)
+    assert("token" in response_data)
+    assert("roles" in response_data)
+    assert("school-admin" in response_data["roles"])
+end
 
-# def test_add_existing_book_to_user(api):
-#     data = {
-#         "book_id": 2
-#     }
+required_fields_for_admin_signup = ["first_name", "last_name", "email", "password", "school_name", "school_address", "application_id"]
 
-#     book_data, status = api.post("users/1/books", data=data)
+@pytest.mark.parametrize("required_field", required_fields_for_admin_signup)
+def test_signup_school_admin_with_missing_required_field(api, required_field):
+    admin_data = {
+        "first_name": "Horace",
+        "last_name": "Slughorn",
+        "email": "horace.slughorn@hogwarts.edu",
+        "password": "P@55w0rd",
+        "role": "school-admin",
+        "school_name": "Hogwarts",
+        "school_address": "Scotland",
+        "application_id": os.getenv("APPLICATION_ID")
+    }
 
-#     assert(status == 201)
-#     assert(book_data["title"] == "Harry Potter and the Chamber of Secrets")
-#     assert(book_data["is_read"] == False)
-# end
+    del admin_data[required_field]
 
-# @pytest.mark.parametrize("read_status", [True, False])
-# def test_set_book_read(api, read_status):
-#     data = {
-#         "is_read": read_status
-#     }
+    error_data, status = api.post("users", data=admin_data)
 
-#     book_data, status = api.put("users/1/books/2", data)
+    assert(status == 400)
+    assert(error_data["code"] == 400)
+    assert("required" in error_data["message"])
+end
 
-#     assert(status == 200)
-#     assert(book_data["url"] == "/api/v1/books/2")
-#     assert(book_data["is_read"] == read_status)
-# end
+def test_user_verification_without_token(api):
+    data = {}
 
-# @pytest.mark.parametrize("read_status", [True, False])
-# def test_set_non_existent_book_read(api, read_status):
-#     data = {
-#         "is_read": read_status
-#     }
+    error_data, status = api.post("users", data=data)
 
-#     error_data, status = api.put("users/1/books/10", data)
+    assert(status == 400)
+    assert("required" in error_data["message"])
+end
 
-#     assert(status == 400)
-#     assert(error_data["code"] == 400)
-#     assert("not found" in error_data["message"])
-# end
+def test_user_verification_with_valid_token(api):
+    # test with dummy valid token -- all we're testing for
+    # right now is that there *is* a token in the payload
+    payload = {
+        "sub": 1, # dumbledore user, id=1
+        "iat": time(),
+        "exp": time() + 1*60 # 24 hours for a real user; 1 min for testing
+    }
 
-# @pytest.mark.parametrize("read_status", [True, False])
-# def test_set_unowned_book_read(api, read_status):
-#     data = {
-#         "is_read": read_status
-#     }
+    token = jwt.encode(payload, os.getenv("SECRET_KEY"), algorithm="HS256").decode("UTF-8")
 
-#     error_data, status = api.put("users/1/books/3", data)
+    data = {
+        "token": token
+    }
 
-#     assert(status == 400)
-#     assert(error_data["code"] == 400)
-#     assert("does not have" in error_data["message"])
-# end
+    user_data, status = api.post("users/verify", data=data)
 
-# @pytest.mark.parametrize("read_status", [True, False])
-# def test_set_book_read_for_non_existent_user(api, read_status):
-#     data = {
-#         "is_read": read_status
-#     }
+    assert(status == 200)
+    assert(user_data["email"] == "albus.dumbledore@hogwarts.edu")
+end
 
-#     error_data, status = api.put("users/10/books/3", data)
+def test_user_verification_with_invalid_token(api):
+    data = {
+        "token": "dummytoken"
+    }
 
-#     assert(status == 404)
-#     assert(error_data["code"] == 404)
-#     assert("not found" in error_data["message"])
-# end
+    user_data, status = api.post("users/verify", data=data)
 
-# def test_delete_existing_user(api):
-#     user_data, status = api.delete("users/1")
+    assert(status == 400)
+end
 
-#     assert(status == 204)
-# end
+def test_login(api):
+    login_data = {
+        "email": "albus.dumbledore@hogwarts.edu",
+        "password": "P@55w0rd"
+    }
 
-# def test_delete_non_existent_user(api):
-#     error_data, status = api.delete("users/10")
+    response, status = api.post("auth/token", data=login_data)
 
-#     assert(status == 404)
-#     assert(error_data["code"] == 404)
-#     assert("not found" in error_data["message"])
-# end
+    assert(status == 200)
+    assert("email" in response)
+    assert("token" in response)
+    assert(response["email"] == "albus.dumbledore@hogwarts.edu")
+
+    try:
+        token = jwt.decode(response["token"], os.getenv("SECRET_KEY"), algorithms=["HS256"])
+    except jwt.exceptions.InvalidTokenError as e:
+        token = None
+    end
+
+    assert(token is not None)
+    assert("sub" in token)
+    assert("iat" in token)
+    assert("exp" in token)
+    assert(int(token["exp"] - token["iat"]) == 10*24*60*60)
+end
+
+required_fields_for_login = ["email", "password"]
+
+@pytest.mark.parametrize("required_field", required_fields_for_login)
+def test_login_with_missing_fields(api, required_field):
+    login_data = {
+        "email": "albus.dumbledore@hogwarts.edu",
+        "password": "P@55w0rd"
+    }
+
+    del login_data[required_field]
+
+    error_data, status = api.post("auth/token", data=login_data)
+
+    assert(status == 400)
+    assert(error_data["code"] == 400)
+    assert("required" in error_data["message"])
+end
+
+@pytest.mark.parametrize("required_field", required_fields_for_login)
+def test_login_with_incorrect_credentials(api, required_field):
+    login_data = {
+        "email": "albus.dumbledore@hogwarts.edu",
+        "password": "P@55w0rd"
+    }
+
+    # mess up the required field, turn it into an incorrect
+    # value
+    login_data[required_field] = login_data[required_field] + "x"
+
+    error_data, status = api.post("auth/token", data=login_data)
+
+    assert(status == 400)
+    assert(error_data["code"] == 400)
+    assert("incorrect" in error_data["message"])
+end

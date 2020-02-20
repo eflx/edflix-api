@@ -61,6 +61,14 @@ class User(Model):
         return jwt.encode(payload, os.getenv("SECRET_KEY"), algorithm="HS256").decode("UTF-8")
     end
 
+    def get_verification_token(self, expires_in=600):
+        return self.get_token(expires_in=expires_in)
+    end
+
+    def get_auth_token(self, expires_in=10*24*60*60):
+        return self.get_token(expires_in=expires_in)
+    end
+
     @staticmethod
     def from_token(token):
         user_id = jwt.decode(token, os.getenv("SECRET_KEY"), algorithms=["HS256"])["sub"]

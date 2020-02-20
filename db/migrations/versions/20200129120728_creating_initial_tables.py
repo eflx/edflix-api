@@ -39,7 +39,7 @@ def upgrade():
     op.bulk_insert(roles, [
         { "name": "admin", "description": "The administrator for all of EdFlix" },
         { "name": "teacher", "description": "Teacher" },
-        { "name": "group-admin", "description": "Administrator for a group" },
+        { "name": "school-admin", "description": "Administrator for a school group" },
         { "name": "customer-service", "description": "A customer service user" }
     ])
 
