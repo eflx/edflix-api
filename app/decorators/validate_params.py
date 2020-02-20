@@ -13,7 +13,7 @@ def validate_params(f):
         try:
             return f(*args, **kwargs)
         except ValidationError as e:
-            error_message = [message for values in e.messages.values() for message in values]
+            error_message = [message for values in e.messages.values() for message in values][0]
 
             return jsonify({ "code": 400, "message": error_message }), 400
         end

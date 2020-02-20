@@ -22,52 +22,106 @@ def test_get_one_user(api):
     assert("Unauthorized" in error_data["message"])
 end
 
-def test_create_new_user(api):
-    data = {
+def test_signup_new_teacher(api):
+    teacher_data = {
         "first_name": "Pomona",
         "last_name": "Sprout",
         "email": "pomona.sprout@hogwarts.edu",
         "password": "P@55w0rd",
+        "role": "teacher",
         "application_id": os.getenv("APPLICATION_ID")
     }
 
-    response_data, status = api.post("users", data=data)
+    response_data, status = api.post("users", data=teacher_data)
 
     assert(status == 202)
+    assert("email" in response_data)
     assert("token" in response_data)
+    assert("roles" in response_data)
+    assert("teacher" in response_data["roles"])
 end
 
-def test_create_existing_user(api):
-    data = {
+def test_signup_existing_teacher(api):
+    teacher_data = {
         "first_name": "Albus",
         "last_name": "Dumbledore",
         "email": "albus.dumbledore@hogwarts.edu",
         "password": "P@55w0rd",
+        "role": "teacher",
         "application_id": os.getenv("APPLICATION_ID")
     }
 
-    response_data, status = api.post("users", data=data)
+    response_data, status = api.post("users", data=teacher_data)
 
     assert(status == 400)
-    assert("exists" in response_data["message"][0])
+    assert("exists" in response_data["message"])
 end
 
-incomplete_user_data = [
-    { "last_name": "Snape", "email": "severus.snape@hogwars.edu", "password": "P@55w0rd" },
-    { "first_name": "Severus", "email": "severus.snape@hogwars.edu", "password": "P@55w0rd" },
-    { "first_name": "Severus", "last_name": "Snape", "password": "P@55w0rd" },
-    { "first_name": "Severus", "last_name": "Snape", "email": "severus.snape@hogwars.edu" }
-]
+required_fields_for_teacher_signup = ["first_name", "last_name", "email", "password", "application_id"]
 
-@pytest.mark.parametrize("user_data", incomplete_user_data)
-def test_create_user_with_missing_required_field(api, user_data):
-    user_data.update({ "application_id": os.getenv("APPLICATION_ID") })
+@pytest.mark.parametrize("required_field", required_fields_for_teacher_signup)
+def test_signup_teacher_with_missing_required_field(api, required_field):
+    teacher_data = {
+        "first_name": "Severus",
+        "last_name": "Snape",
+        "email": "severus.snape@hogwarts.edu",
+        "password": "P@55w0rd",
+        "role": "teacher",
+        "application_id": os.getenv("APPLICATION_ID")
+    }
 
-    error_data, status = api.post("users", data=user_data)
+    del teacher_data[required_field]
+
+    error_data, status = api.post("users", data=teacher_data)
 
     assert(status == 400)
     assert(error_data["code"] == 400)
-    assert("required" in error_data["message"][0])
+    assert("required" in error_data["message"])
+end
+
+def test_signup_school_admin(api):
+    admin_data = {
+        "first_name": "Filius",
+        "last_name": "Flitwick",
+        "email": "filuis.flitwick@hogwarts.edu",
+        "password": "P@55w0rd",
+        "role": "school-admin",
+        "school_name": "Hogwarts",
+        "school_address": "Scotland",
+        "application_id": os.getenv("APPLICATION_ID")
+    }
+
+    response_data, status = api.post("users", data=admin_data)
+
+    assert(status == 202)
+    assert("email" in response_data)
+    assert("token" in response_data)
+    assert("roles" in response_data)
+    assert("school-admin" in response_data["roles"])
+end
+
+required_fields_for_admin_signup = ["first_name", "last_name", "email", "password", "school_name", "school_address", "application_id"]
+
+@pytest.mark.parametrize("required_field", required_fields_for_admin_signup)
+def test_signup_school_admin_with_missing_required_field(api, required_field):
+    admin_data = {
+        "first_name": "Horace",
+        "last_name": "Slughorn",
+        "email": "horace.slughorn@hogwarts.edu",
+        "password": "P@55w0rd",
+        "role": "school-admin",
+        "school_name": "Hogwarts",
+        "school_address": "Scotland",
+        "application_id": os.getenv("APPLICATION_ID")
+    }
+
+    del admin_data[required_field]
+
+    error_data, status = api.post("users", data=admin_data)
+
+    assert(status == 400)
+    assert(error_data["code"] == 400)
+    assert("required" in error_data["message"])
 end
 
 def test_user_verification_without_token(api):
@@ -76,7 +130,7 @@ def test_user_verification_without_token(api):
     error_data, status = api.post("users", data=data)
 
     assert(status == 400)
-    assert("required" in error_data["message"][0])
+    assert("required" in error_data["message"])
 end
 
 def test_user_verification_with_valid_token(api):

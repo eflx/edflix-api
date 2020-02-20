@@ -47,13 +47,17 @@ class UsersView(View):
     def post(self):
         # TODO: check application id to see if it is allowed
 
+        role = Role.one(name=request.json.get("role", "teacher"))
+
         new_user = User.new(request.json)
-        new_user.role = Role.one(name=request.json.get("role", "teacher"))
+        new_user.roles.append(role)
         new_user.save()
 
         response = {
             # expires in one day
-            "token": new_user.get_verification_token(expires_in=24*60*60)
+            "token": new_user.get_verification_token(expires_in=24*60*60),
+            "email": new_user.email,
+            "roles": list(map(lambda role: role.name, new_user.roles))
         }
 
         return jsonify(response), 202

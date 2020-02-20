@@ -37,8 +37,14 @@ class UserSchema(Schema):
 
     role = ma.Str(
         load_only=True,
-        validate=validate.OneOf(["teacher"], error="Role must be 'teacher'")
+        validate=validate.OneOf(["teacher", "school-admin"], error="Role must be one of 'teacher' or 'school-admin'"),
+        missing="teacher"
     )
+
+    # these two fields must be filled out if the role is school-admin.
+    # see validate_role()
+    school_name = ma.Str(load_only=True)
+    school_address = ma.Str(load_only=True)
 
     application_id = ma.Str(
         required=True,
@@ -59,6 +65,23 @@ class UserSchema(Schema):
 
     @validates_schema
     def validate_role(self, data, **kwargs):
-        pass
+        role = data["role"]
+
+        if role == "school-admin":
+            if not "school_name" in data:
+                raise ValidationError(f"School name is required")
+
+            if not bool(data["school_name"].strip()):
+                raise ValidationError(f"School name cannot be empty")
+            end
+
+            if not "school_address" in data:
+                raise ValidationError("School address is required")
+            end
+
+            if not bool(data["school_address"].strip()):
+                raise ValidationError(f"School address cannot be empty")
+            end
+        end
     end
 end

@@ -3,7 +3,6 @@ flask-classful
 flask-sqlalchemy
 flask-migrate
 flask-cors
-flask-request-params
 flask-marshmallow
 gunicorn
 psycopg2-binary
