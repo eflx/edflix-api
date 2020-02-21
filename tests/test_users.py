@@ -35,10 +35,7 @@ def test_signup_new_teacher(api):
     response_data, status = api.post("users", data=teacher_data)
 
     assert(status == 202)
-    assert("email" in response_data)
     assert("token" in response_data)
-    assert("roles" in response_data)
-    assert("teacher" in response_data["roles"])
 end
 
 def test_signup_existing_teacher(api):
@@ -94,10 +91,7 @@ def test_signup_school_admin(api):
     response_data, status = api.post("users", data=admin_data)
 
     assert(status == 202)
-    assert("email" in response_data)
     assert("token" in response_data)
-    assert("roles" in response_data)
-    assert("school-admin" in response_data["roles"])
 end
 
 required_fields_for_admin_signup = ["first_name", "last_name", "email", "password", "school_name", "school_address", "application_id"]
@@ -151,7 +145,7 @@ def test_user_verification_with_valid_token(api):
     user_data, status = api.post("users/verify", data=data)
 
     assert(status == 200)
-    assert(user_data["email"] == "albus.dumbledore@hogwarts.edu")
+    assert(user_data.get("email") == "albus.dumbledore@hogwarts.edu")
 end
 
 def test_user_verification_with_invalid_token(api):
@@ -173,9 +167,7 @@ def test_login(api):
     response, status = api.post("auth/token", data=login_data)
 
     assert(status == 200)
-    assert("email" in response)
     assert("token" in response)
-    assert(response["email"] == "albus.dumbledore@hogwarts.edu")
 
     try:
         token = jwt.decode(response["token"], os.getenv("SECRET_KEY"), algorithms=["HS256"])
@@ -224,4 +216,18 @@ def test_login_with_incorrect_credentials(api, required_field):
     assert(status == 400)
     assert(error_data["code"] == 400)
     assert("incorrect" in error_data["message"])
+end
+
+def test_get_userinfo_without_token(api):
+    error_data, status = api.get("users/userinfo")
+
+    assert(status == 401)
+    assert("Not authorized" in error_data["message"])
+end
+
+def test_get_userinfo_with_correct_token(api, auth):
+    user_data, status = api.get("users/userinfo", headers={ "Authorization": f"Bearer {auth['token']}" })
+
+    assert(status == 200)
+    assert(user_data.get("email") == "albus.dumbledore@hogwarts.edu")
 end

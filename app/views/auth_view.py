@@ -11,6 +11,7 @@ from flask import jsonify
 from flask_classful import route
 
 from app.schemas import AuthSchema
+from app.schemas import UserSchema
 
 from app.decorators import validate_params
 from app.decorators import ensure_json
@@ -18,6 +19,7 @@ from app.decorators import ensure_json
 from .view import View
 
 auth_schema = AuthSchema()
+user_schema = UserSchema()
 
 class AuthView(View):
     @route("/token", methods=["POST"])
@@ -33,8 +35,7 @@ class AuthView(View):
         end
 
         response = {
-            "token": user.get_auth_token(),
-            "email": user.email
+            "token": user.get_auth_token()
         }
 
         return jsonify(response), 200
