@@ -67,8 +67,8 @@ def api(test_client, init_db):
 end
 
 @pytest.fixture(scope="function")
-def auth(api, init_db):
-    user_data, status = api.post("auth/login", data={ "email": "frizzy@me.com", "password": "P@55w0rd" })
+def auth(api):
+    auth_response, _ = api.post("auth/token", data={ "email": "albus.dumbledore@hogwarts.edu", "password": "P@55w0rd" })
 
-    yield user_data
+    yield auth_response
 end

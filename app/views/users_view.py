@@ -15,6 +15,7 @@ from app.schemas import UserSchema
 from app.decorators import admin_required
 from app.decorators import validate_params
 from app.decorators import ensure_json
+from app.decorators import auth_required
 
 from .view import View
 
@@ -55,9 +56,7 @@ class UsersView(View):
 
         response = {
             # expires in one day
-            "token": new_user.get_verification_token(expires_in=24*60*60),
-            "email": new_user.email,
-            "roles": list(map(lambda role: role.name, new_user.roles))
+            "token": new_user.get_verification_token(expires_in=24*60*60)
         }
 
         return jsonify(response), 202
@@ -82,6 +81,12 @@ class UsersView(View):
             user.save()
         end
 
-        return self.render(user_schema.dump(user))
+        return self.render({ "email": user.email })
+    end
+
+    @route("/userinfo", methods=["GET"])
+    @auth_required
+    def userinfo(self):
+        return user_schema.jsonify(request.user)
     end
 end
