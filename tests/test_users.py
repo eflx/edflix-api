@@ -36,6 +36,8 @@ def test_signup_new_teacher(api):
 
     assert(status == 202)
     assert("token" in response_data)
+    assert("email" in response_data)
+    assert(response_data["email"] == "pomona.sprout@hogwarts.edu")
 end
 
 def test_signup_existing_teacher(api):
@@ -92,6 +94,8 @@ def test_signup_school_admin(api):
 
     assert(status == 202)
     assert("token" in response_data)
+    assert("email" in response_data)
+    assert(response_data["email"] == "remus.lupin@hogwarts.edu")
 end
 
 required_fields_for_admin_signup = ["first_name", "last_name", "email", "password", "school_name", "school_address", "application_id"]
