@@ -7,11 +7,11 @@ class UserRole(Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True, index=True)
 
-    role_id = db.Column(db.Integer, db.ForeignKey("roles.id"))
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    role_id = db.Column(db.Integer, db.ForeignKey("roles.id", ondelete="cascade"))
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
 
-    role = db.relationship("Role", cascade="delete")
-    user = db.relationship("User", cascade="delete")
+    role = db.relationship("Role")
+    user = db.relationship("User")
 
     def __repr__(self):
         return f"UserRole (user: {self.user.email}, role: {self.role.name})"

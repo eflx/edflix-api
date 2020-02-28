@@ -16,6 +16,8 @@ from app.schemas import UserSchema
 from app.decorators import validate_params
 from app.decorators import ensure_json
 
+from app.lib import auth
+
 from .view import View
 
 auth_schema = AuthSchema()
@@ -35,7 +37,7 @@ class AuthView(View):
         end
 
         response = {
-            "token": user.get_auth_token()
+            "token": auth.get_token(user, expires_in=10*24*60*60) # 10 days
         }
 
         return jsonify(response), 200

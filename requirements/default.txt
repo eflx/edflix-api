@@ -1,10 +1,10 @@
 flask
 flask-classful
-flask-sqlalchemy
-flask-migrate
 flask-cors
 flask-marshmallow
+flask-migrate
+flask-sqlalchemy
 gunicorn
 psycopg2-binary
-python-dotenv
 pyjwt
+python-dotenv

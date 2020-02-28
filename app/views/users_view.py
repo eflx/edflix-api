@@ -17,6 +17,8 @@ from app.decorators import validate_params
 from app.decorators import ensure_json
 from app.decorators import auth_required
 
+from app.lib import auth
+
 from .view import View
 
 user_schema = UserSchema()
@@ -55,8 +57,7 @@ class UsersView(View):
         new_user.save()
 
         response = {
-            # expires in one day
-            "token": new_user.get_verification_token(expires_in=24*60*60),
+            "token": auth.get_token(new_user, expires_in=24*60*60), # 1 day
             "email": new_user.email
         }
 
@@ -71,7 +72,7 @@ class UsersView(View):
         end
 
         try:
-            user = User.from_token(request.json["token"])
+            user = auth.get_user(request.json["token"])
         except jwt.exceptions.InvalidTokenError as e: # catches all jwt errors
             return self.error(400, e.args[0])
         end

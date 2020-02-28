@@ -5,7 +5,7 @@ from functools import wraps
 from flask import request
 from flask import jsonify
 
-from app.models import User
+from app.lib import auth
 
 def auth_required(f):
     @wraps(f)
@@ -18,13 +18,13 @@ def auth_required(f):
 
         # auth header is of the form "Bearer <token>"
         if len(auth_header) != 2:
-            return jsonify({ "code": 401, "message": "Not authorized"}), 401
+            return jsonify({ "code": 401, "message": "Not authorized" }), 401
         end
 
-        request.user = User.from_token(auth_header[1])
+        request.user = auth.get_user(auth_header[1])
 
         if not request.user:
-            return ({ "code": 401, "message": "Not authorized"}), 401
+            return ({ "code": 401, "message": "Not authorized" }), 401
         end
 
         return f(*args, **kwargs)

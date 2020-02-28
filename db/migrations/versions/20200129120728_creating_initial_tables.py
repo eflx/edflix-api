@@ -71,8 +71,8 @@ def upgrade():
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
         sa.Column('role_id', sa.Integer(), nullable=True),
         sa.Column('user_id', sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(['role_id'], ['roles.id'], ),
-        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+        sa.ForeignKeyConstraint(['role_id'], ['roles.id'], ondelete='cascade'),
+        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='cascade'),
         sa.PrimaryKeyConstraint('id')
     )
 

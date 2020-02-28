@@ -14,7 +14,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+#lib/ # there's a lib in the project we don't want omitted
 lib64/
 parts/
 sdist/
