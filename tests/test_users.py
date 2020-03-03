@@ -223,7 +223,14 @@ def test_login_with_incorrect_credentials(api, required_field):
 end
 
 def test_login_for_unverified_user(api):
-    pass
+    login_data = {
+        "email": "gilderoy.lockhart@hogwarts.edu",
+        "password": "P@55w0rd"
+    }
+
+    error_data, status = api.post("auth/token", data=login_data)
+
+    assert(status == 403)
 end
 
 def test_get_userinfo_without_token(api):
