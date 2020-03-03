@@ -70,6 +70,7 @@ class UserSchema(Schema):
         if role == "school-admin":
             if not "school_name" in data:
                 raise ValidationError(f"School name is required")
+            end
 
             if not bool(data["school_name"].strip()):
                 raise ValidationError(f"School name cannot be empty")

@@ -222,6 +222,10 @@ def test_login_with_incorrect_credentials(api, required_field):
     assert("incorrect" in error_data["message"])
 end
 
+def test_login_for_unverified_user(api):
+    pass
+end
+
 def test_get_userinfo_without_token(api):
     error_data, status = api.get("users/userinfo")
 

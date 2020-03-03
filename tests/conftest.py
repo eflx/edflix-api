@@ -42,9 +42,10 @@ def init_db():
         role.save()
     end
 
-    dumbledore = User(first_name="Albus", last_name="Dumbledore", password="P@55w0rd", email="albus.dumbledore@hogwarts.edu")
-    mcgonagall = User(first_name="Minerva", last_name="McGonagall", password="P@55w0rd", email="minerva.mcgonagall@hogwarts.edu")
-    flitwick = User(first_name="Filius", last_name="Flitwick", password="P@55w0rd", email="filius.flitwick@hogwarts.edu")
+    # create all verified users so logging them in won't return an 403
+    dumbledore = User(first_name="Albus", last_name="Dumbledore", password="P@55w0rd", email="albus.dumbledore@hogwarts.edu", verified=True)
+    mcgonagall = User(first_name="Minerva", last_name="McGonagall", password="P@55w0rd", email="minerva.mcgonagall@hogwarts.edu", verified=True)
+    flitwick = User(first_name="Filius", last_name="Flitwick", password="P@55w0rd", email="filius.flitwick@hogwarts.edu", verified=True)
 
     for teacher in [dumbledore, mcgonagall, flitwick]:
         teacher.roles.append(teacher_role)

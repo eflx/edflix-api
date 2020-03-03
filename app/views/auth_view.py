@@ -36,6 +36,10 @@ class AuthView(View):
             return self.error(400, "The email or password is incorrect")
         end
 
+        if not user.verified:
+            return self.error(403, "The email is unverified and cannot be used to login")
+        end
+
         response = {
             "token": auth.get_token(user, expires_in=10*24*60*60) # 10 days
         }
