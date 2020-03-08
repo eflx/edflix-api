@@ -7,19 +7,19 @@ import pytest
 from time import time
 
 def test_get_all_users(api):
-    error_data, status = api.get("users")
+    error, status = api.get("users")
 
     assert(status == 401)
-    assert(error_data["code"] == 401)
-    assert("Unauthorized" in error_data["message"])
+    assert(error["code"] == 401)
+    assert("Unauthorized" in error["message"])
 end
 
 def test_get_one_user(api):
-    error_data, status = api.get("users")
+    error, status = api.get("users")
 
     assert(status == 401)
-    assert(error_data["code"] == 401)
-    assert("Unauthorized" in error_data["message"])
+    assert(error["code"] == 401)
+    assert("Unauthorized" in error["message"])
 end
 
 def test_signup_new_teacher(api):
@@ -34,7 +34,7 @@ def test_signup_new_teacher(api):
 
     response_data, status = api.post("users", data=teacher_data)
 
-    assert(status == 202)
+    assert(status == 201)
     assert("token" in response_data)
     assert("email" in response_data)
     assert(response_data["email"] == "pomona.sprout@hogwarts.edu")
@@ -71,11 +71,11 @@ def test_signup_teacher_with_missing_required_field(api, required_field):
 
     del teacher_data[required_field]
 
-    error_data, status = api.post("users", data=teacher_data)
+    error, status = api.post("users", data=teacher_data)
 
     assert(status == 400)
-    assert(error_data["code"] == 400)
-    assert("required" in error_data["message"])
+    assert(error["code"] == 400)
+    assert("required" in error["message"])
 end
 
 def test_signup_school_admin(api):
@@ -92,7 +92,7 @@ def test_signup_school_admin(api):
 
     response_data, status = api.post("users", data=admin_data)
 
-    assert(status == 202)
+    assert(status == 201)
     assert("token" in response_data)
     assert("email" in response_data)
     assert(response_data["email"] == "remus.lupin@hogwarts.edu")
@@ -115,20 +115,20 @@ def test_signup_school_admin_with_missing_required_field(api, required_field):
 
     del admin_data[required_field]
 
-    error_data, status = api.post("users", data=admin_data)
+    error, status = api.post("users", data=admin_data)
 
     assert(status == 400)
-    assert(error_data["code"] == 400)
-    assert("required" in error_data["message"])
+    assert(error["code"] == 400)
+    assert("required" in error["message"])
 end
 
 def test_user_verification_without_token(api):
     data = {}
 
-    error_data, status = api.post("users", data=data)
+    error, status = api.post("users", data=data)
 
     assert(status == 400)
-    assert("required" in error_data["message"])
+    assert("required" in error["message"])
 end
 
 def test_user_verification_with_valid_token(api):
@@ -197,11 +197,11 @@ def test_login_with_missing_fields(api, required_field):
 
     del login_data[required_field]
 
-    error_data, status = api.post("auth/token", data=login_data)
+    error, status = api.post("auth/token", data=login_data)
 
     assert(status == 400)
-    assert(error_data["code"] == 400)
-    assert("required" in error_data["message"])
+    assert(error["code"] == 400)
+    assert("required" in error["message"])
 end
 
 @pytest.mark.parametrize("required_field", required_fields_for_login)
@@ -215,11 +215,11 @@ def test_login_with_incorrect_credentials(api, required_field):
     # value
     login_data[required_field] = login_data[required_field] + "x"
 
-    error_data, status = api.post("auth/token", data=login_data)
+    error, status = api.post("auth/token", data=login_data)
 
     assert(status == 400)
-    assert(error_data["code"] == 400)
-    assert("incorrect" in error_data["message"])
+    assert(error["code"] == 400)
+    assert("incorrect" in error["message"])
 end
 
 def test_login_for_unverified_user(api):
@@ -228,16 +228,16 @@ def test_login_for_unverified_user(api):
         "password": "P@55w0rd"
     }
 
-    error_data, status = api.post("auth/token", data=login_data)
+    error, status = api.post("auth/token", data=login_data)
 
     assert(status == 403)
 end
 
 def test_get_userinfo_without_token(api):
-    error_data, status = api.get("users/userinfo")
+    error, status = api.get("users/userinfo")
 
     assert(status == 401)
-    assert("Not authorized" in error_data["message"])
+    assert("Not authorized" in error["message"])
 end
 
 def test_get_userinfo_with_correct_token(api, auth):
@@ -245,4 +245,91 @@ def test_get_userinfo_with_correct_token(api, auth):
 
     assert(status == 200)
     assert(user_data.get("email") == "albus.dumbledore@hogwarts.edu")
+end
+
+def test_update_user_without_auth(api):
+    # it doesn't matter what this is, there should
+    # always be an error
+    user_data = {
+        "first_name": "Albus",
+        "last_name": "Dumbledore"
+    }
+
+    _, status = api.put("users/1", data=user_data)
+
+    assert(status == 401)
+end
+
+update_fields = [
+    ("first_name", "Wulfric"),
+    ("last_name", "Percival")
+]
+
+@pytest.mark.parametrize("attribute, value", update_fields)
+def test_update_user_without_password_change(api, auth, attribute, value):
+    user_data = {
+        "first_name": "Albus",
+        "last_name": "Dumbledore"
+    }
+
+    user_data[attribute] = value
+
+    response, status = api.put("users/1", data=user_data, headers={ "Authorization": f"Bearer {auth['token']}" })
+
+    assert(status == 200)
+    assert(response.get(attribute) == value)
+end
+
+# testing updating a user that's not identified by the auth token
+def test_update_different_user(api, auth):
+    user_data = {
+        "first_name": "Albus",
+        "last_name": "Dumbledore",
+        "new_password": "fawkes"
+    }
+
+    error, status = api.put("users/2", data=user_data, headers={ "Authorization": f"Bearer {auth['token']}" })
+
+    assert(status == 403)
+    assert("mismatch" in error["message"])
+end
+
+def test_update_user_password_without_current_password(api, auth):
+    user_data = {
+        "first_name": "Albus",
+        "last_name": "Dumbledore",
+        "new_password": "fawkes"
+    }
+
+    error, status = api.put("users/1", data=user_data, headers={ "Authorization": f"Bearer {auth['token']}" })
+
+    assert(status == 400)
+    assert("required" in error["message"])
+end
+
+def test_update_user_password_with_incorrect_current_password(api, auth):
+    user_data = {
+        "first_name": "Albus",
+        "last_name": "Dumbledore",
+        "current_password": "toffee-eclairs",
+        "new_password": "fawkes"
+    }
+
+    error, status = api.put("users/1", data=user_data, headers={ "Authorization": f"Bearer {auth['token']}" })
+
+    assert(status == 400)
+    assert("match" in error["message"])
+end
+
+def test_update_user_password_with_correct_current_password(api, auth):
+    user_data = {
+        "first_name": "Albus",
+        "last_name": "Dumbledore",
+        "current_password": "P@55w0rd",
+        "new_password": "fawkes"
+    }
+
+    response, status = api.put("users/1", data=user_data, headers={ "Authorization": f"Bearer {auth['token']}" })
+
+    assert(status == 200)
 end

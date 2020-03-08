@@ -34,15 +34,15 @@ class API:
         return self.call("get", uri, **kwargs)
     end
 
-    def post(self, uri, data=None):
-        return self.call("post", uri, data)
+    def post(self, uri, data=None, **kwargs):
+        return self.call("post", uri, data, **kwargs)
     end
 
-    def put(self, uri, data=None):
-        return self.call("put", uri, data)
+    def put(self, uri, data=None, **kwargs):
+        return self.call("put", uri, data, **kwargs)
     end
 
-    def delete(self, uri, data=None):
-        return self.call("delete", uri, data)
+    def delete(self, uri, **kwargs):
+        return self.call("delete", uri, **kwargs)
     end
 end

@@ -35,11 +35,15 @@ class User(Model):
 
         user = User.one(email=params["email"])
 
-        if not user or not check_password_hash(user.password, params["password"]):
+        if not user or not user.has_password(params["password"]):
             return None
         end
 
         return user
+    end
+
+    def has_password(self, password):
+        return check_password_hash(self.password, password)
     end
 
     def __repr__(self):
