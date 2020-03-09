@@ -72,12 +72,22 @@ class UsersView(View):
             return self.error(403, "User mismatch")
         end
 
-        request.user.first_name = request.json.get("first_name") or request.user.first_name
-        request.user.last_name = request.json.get("last_name") or request.user.last_name
-
+        # the current password is required if you're changing
+        # a user's password
         if request.json.get("new_password"):
+            if not request.json.get("current_password"):
+                return self.error(400, "Current password is required")
+            end
+
+            if not request.user.has_password(request.json["current_password"]):
+                return self.error(400, "Password does not match current password")
+            end
+            
             request.user.set_password(request.json["new_password"])
         end
+
+        request.user.first_name = request.json.get("first_name") or request.user.first_name
+        request.user.last_name = request.json.get("last_name") or request.user.last_name
 
         request.user.save()
 
