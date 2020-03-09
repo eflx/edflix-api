@@ -284,8 +284,7 @@ end
 def test_update_different_user(api, auth):
     user_data = {
         "first_name": "Albus",
-        "last_name": "Dumbledore",
-        "new_password": "fawkes"
+        "last_name": "Dumbledore"
     }
 
     error, status = api.put("users/2", data=user_data, headers={ "Authorization": f"Bearer {auth['token']}" })
@@ -294,42 +293,12 @@ def test_update_different_user(api, auth):
     assert("mismatch" in error["message"])
 end
 
-def test_update_user_password_without_current_password(api, auth):
+def test_update_user_password(api, auth):
     user_data = {
-        "first_name": "Albus",
-        "last_name": "Dumbledore",
         "new_password": "fawkes"
     }
 
-    error, status = api.put("users/1", data=user_data, headers={ "Authorization": f"Bearer {auth['token']}" })
-
-    assert(status == 400)
-    assert("required" in error["message"])
-end
-
-def test_update_user_password_with_incorrect_current_password(api, auth):
-    user_data = {
-        "first_name": "Albus",
-        "last_name": "Dumbledore",
-        "current_password": "toffee-eclairs",
-        "new_password": "fawkes"
-    }
-
-    error, status = api.put("users/1", data=user_data, headers={ "Authorization": f"Bearer {auth['token']}" })
-
-    assert(status == 400)
-    assert("match" in error["message"])
-end
-
-def test_update_user_password_with_correct_current_password(api, auth):
-    user_data = {
-        "first_name": "Albus",
-        "last_name": "Dumbledore",
-        "current_password": "P@55w0rd",
-        "new_password": "fawkes"
-    }
-
-    response, status = api.put("users/1", data=user_data, headers={ "Authorization": f"Bearer {auth['token']}" })
+    _, status = api.put("users/1", data=user_data, headers={ "Authorization": f"Bearer {auth['token']}" })
 
     assert(status == 200)
 end
