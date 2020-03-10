@@ -131,9 +131,7 @@ def test_user_verification_without_token(api):
     assert("required" in error["message"])
 end
 
-def test_user_verification_with_valid_token(api):
-    # test with dummy valid token -- all we're testing for
-    # right now is that there *is* a token in the payload
+def test_user_verification_with_valid_input(api):
     payload = {
         "sub": 1, # dumbledore user, id=1
         "iat": time(),
@@ -143,7 +141,8 @@ def test_user_verification_with_valid_token(api):
     token = jwt.encode(payload, os.getenv("SECRET_KEY"), algorithm="HS256").decode("UTF-8")
 
     data = {
-        "token": token
+        "token": token,
+        "application_id": os.getenv("APPLICATION_ID")
     }
 
     user_data, status = api.post("users/verify", data=data)
@@ -152,14 +151,30 @@ def test_user_verification_with_valid_token(api):
     assert(user_data.get("email") == "albus.dumbledore@hogwarts.edu")
 end
 
+# application id is checked before the token, so if we're checking for
+# invalid token, we have to give the correct application id
 def test_user_verification_with_invalid_token(api):
     data = {
-        "token": "dummytoken"
+        "token": "dummy-token",
+        "application_id": os.getenv("APPLICATION_ID")
     }
 
-    user_data, status = api.post("users/verify", data=data)
+    _, status = api.post("users/verify", data=data)
 
     assert(status == 400)
+end
+
+def test_user_verification_with_invalid_application_id(api):
+    data = {
+        "token": "dummy-token",
+        "application_id": "dummy-application-id"
+    }
+
+    error, status = api.post("users/verify", data=data)
+
+    assert(status == 400)
+    assert(error["code"] == 400)
+    assert("unknown" in error["message"].lower())
 end
 
 def test_login(api):
@@ -332,4 +347,131 @@ def test_update_user_password_with_correct_current_password(api, auth):
     response, status = api.put("users/1", data=user_data, headers={ "Authorization": f"Bearer {auth['token']}" })
 
     assert(status == 200)
+end
+
+required_fields_for_forgot_password = ["email", "application_id"]
+
+@pytest.mark.parametrize("required_field", required_fields_for_forgot_password)
+def test_forgotten_password_with_missing_required_field(api, required_field):
+    forgot_password_data = {
+        "email": "filius.flitwick@hogwarts.edu",
+        "application_id": os.getenv("APPLICATION_ID")
+    }
+
+    del forgot_password_data[required_field]
+
+    error, status = api.post("users/forgot-password", data=forgot_password_data)
+
+    assert(status == 400)
+    assert("required" in error["message"])
+end
+
+@pytest.mark.parametrize("required_field", required_fields_for_forgot_password)
+def test_forgot_password_with_invalid_input(api, required_field):
+    forgot_password_data = {
+        "email": "filius.flitwick@hogwarts.edu",
+        "application_id": os.getenv("APPLICATION_ID")
+    }
+
+    # mess up the required field, turn it into an incorrect
+    # value
+    forgot_password_data[required_field] = forgot_password_data[required_field] + "x"
+
+    error, status = api.post("users/forgot-password", data=forgot_password_data)
+
+    assert(status == 400)
+    assert(error["code"] == 400)
+    assert("unknown" in error["message"].lower())
+end
+
+def test_forgotten_password(api):
+    forgot_password_data = {
+        "email": "filius.flitwick@hogwarts.edu",
+        "application_id": os.getenv("APPLICATION_ID")
+    }
+
+    response, status = api.post("users/forgot-password", data=forgot_password_data)
+
+    assert(status == 200)
+    assert("token" in response)
+    assert("email" in response)
+    assert(response["email"] == "filius.flitwick@hogwarts.edu")
+end
+
+#
+
+required_fields_for_password_reset = ["token", "application_id", "new_password"]
+
+@pytest.mark.parametrize("required_field", required_fields_for_password_reset)
+def test_password_reset_with_missing_required_field(api, required_field):
+    payload = {
+        "sub": 1, # dumbledore user, id=1
+        "iat": time(),
+        "exp": time() + 1*60 # 30 mins for a real user; 1 min for testing
+    }
+
+    token = jwt.encode(payload, os.getenv("SECRET_KEY"), algorithm="HS256").decode("UTF-8")
+
+    password_reset_data = {
+        "token": token,
+        "application_id": os.getenv("APPLICATION_ID"),
+        "new_password": "newpassword"
+    }
+
+    del password_reset_data[required_field]
+
+    error, status = api.post("users/reset-password", data=password_reset_data)
+
+    assert(status == 400)
+    assert(error["code"] == 400)
+    assert("required" in error["message"] or "token" in error["message"].lower())
+end
+
+def test_password_reset_with_invalid_token(api):
+    password_reset_data = {
+        "token": "dummy-token",
+        "application_id": os.getenv("APPLICATION_ID"),
+        "new_password": "newpassword"
+    }
+
+    error, status = api.post("users/reset-password", data=password_reset_data)
+
+    assert(status == 400)
+    assert(error["code"] == 400)
+end
+
+def test_password_reset_with_invalid_application_id(api):
+    password_reset_data = {
+        "token": "does-not-matter",
+        "application_id": "unknown-application",
+        "new_password": "newpassword"
+    }
+
+    error, status = api.post("users/reset-password", data=password_reset_data)
+
+    assert(status == 400)
+    assert(error["code"] == 400)
+    assert("unknown" in error["message"].lower())
+end
+
+def test_password_reset_with_valid_input(api):
+    payload = {
+        "sub": 1, # dumbledore user, id=1
+        "iat": time(),
+        "exp": time() + 1*60 # 30 mins for a real user; 1 min for testing
+    }
+
+    token = jwt.encode(payload, os.getenv("SECRET_KEY"), algorithm="HS256").decode("UTF-8")
+
+    password_reset_data = {
+        "token": token,
+        "application_id": os.getenv("APPLICATION_ID"),
+        "new_password": "newpassword"
+    }
+
+    response, status = api.post("users/reset-password", data=password_reset_data)
+
+    assert(status == 200)
+    assert("email" in response)
+    assert(response["email"] == "albus.dumbledore@hogwarts.edu")
 end

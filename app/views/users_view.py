@@ -16,6 +16,7 @@ from app.decorators import admin_required
 from app.decorators import validate_params
 from app.decorators import ensure_json
 from app.decorators import auth_required
+from app.decorators import appid_required
 
 from app.lib import auth
 
@@ -46,10 +47,9 @@ class UsersView(View):
 
     @route("", methods=["POST"])
     @validate_params
+    @appid_required
     @ensure_json
     def post(self):
-        # TODO: check application id to see if it is allowed
-
         role = Role.one(name=request.json.get("role", "teacher"))
 
         new_user = User.new(request.json) # TODO: validate password constraints
@@ -82,7 +82,7 @@ class UsersView(View):
             if not request.user.has_password(request.json["current_password"]):
                 return self.error(400, "Password does not match current password")
             end
-            
+
             request.user.set_password(request.json["new_password"])
         end
 
@@ -95,6 +95,7 @@ class UsersView(View):
     end
 
     @route("/verify", methods=["POST"])
+    @appid_required
     @ensure_json
     def verify(self):
         if not "token" in request.json:
@@ -112,6 +113,52 @@ class UsersView(View):
             user.verified = True
             user.save()
         end
+
+        return self.render({ "email": user.email })
+    end
+
+    @route("/forgot-password", methods=["POST"])
+    @appid_required
+    @ensure_json
+    def forgot_password(self):
+        if not "email" in request.json:
+            return self.error(400, "Email is required")
+        end
+
+        user = User.one(email=request.json["email"])
+
+        if not user:
+            return self.error(400, "Unknown user")
+        end
+
+        response = {
+            "token": auth.get_token(user, expires_in=30*60), # 30 minutes
+            "email": user.email
+        }
+
+        return jsonify(response)
+    end
+
+    @route("/reset-password", methods=["POST"])
+    @appid_required
+    @ensure_json
+    def reset_password(self):
+        if not "token" in request.json:
+            return self.error(400, "Token is required")
+        end
+
+        try:
+            user = auth.get_user(request.json["token"])
+        except jwt.exceptions.InvalidTokenError as e: # catches all jwt errors
+            return self.error(400, e.args[0])
+        end
+
+        if not "new_password" in request.json:
+            return self.error(400, "New password is required")
+        end
+
+        user.set_password(request.json["new_password"])
+        user.save()
 
         return self.render({ "email": user.email })
     end
