@@ -153,6 +153,14 @@ class UsersView(View):
             return self.error(400, e.args[0])
         end
 
+        if not "email" in request.json:
+            return self.error(400, "Email is required")
+        end
+
+        if request.json["email"] != user.email:
+            return self.error(403, "User mismatch")
+        end
+
         if not "new_password" in request.json:
             return self.error(400, "New password is required")
         end
