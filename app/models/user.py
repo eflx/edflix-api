@@ -5,6 +5,9 @@ from werkzeug.security import check_password_hash
 
 from .model import Model, db
 
+from .collection import Collection
+from .role import Role
+
 class User(Model):
     __tablename__ = "users"
 
@@ -50,4 +53,31 @@ class User(Model):
         return f"User ({self.email})"
     end
 
+    def has_role(self, role_name):
+        return role_name in map(lambda role: role.name, self.roles)
+    end
+
+    def add_role(self, role_name):
+        if self.has_role(role_name):
+            return
+        end
+
+        default_role = Role.one(name="teacher")
+
+        role = Role.one(name=role_name) or default_role
+
+        self.roles.append(role)
+        self.save()
+    end
+
+    def create_collection(self, title):
+        if not title or title.lower() == "uncategorized":
+            raise ValueError(f"'{title}' is not an allowed title")
+        end
+        
+        new_collection = Collection.new({"title": title}, user=self)
+        new_collection.save()
+
+        return new_collection
+    end
 end

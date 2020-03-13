@@ -11,7 +11,7 @@ load_dotenv(verbose=True)
 import pytest
 
 from app import create_app
-from app import db
+from app import db as database
 from app.models import User, Role
 
 from tests.api import API
@@ -31,8 +31,8 @@ def test_client():
 end
 
 @pytest.fixture(scope="module")
-def init_db():
-    db.create_all()
+def db():
+    database.create_all()
 
     teacher_role = Role(name="teacher")
     admin_role = Role(name="admin")
@@ -60,13 +60,13 @@ def init_db():
         teacher.save()
     end
 
-    yield db
+    yield database
 
-    db.drop_all()
+    database.drop_all()
 end
 
 @pytest.fixture(scope="module")
-def api(test_client, init_db):
+def api(test_client, db):
     return API(test_client)
 end
 
@@ -75,4 +75,11 @@ def auth(api):
     auth_response, _ = api.post("auth/token", data={ "email": "albus.dumbledore@hogwarts.edu", "password": "P@55w0rd" })
 
     yield auth_response
+end
+
+@pytest.fixture(scope="module")
+def user(test_client, db):
+    user = User.one(email="minerva.mcgonagall@hogwarts.edu")
+
+    return user
 end

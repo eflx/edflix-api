@@ -50,10 +50,8 @@ class UsersView(View):
     @appid_required
     @ensure_json
     def post(self):
-        role = Role.one(name=request.json.get("role", "teacher"))
-
         new_user = User.new(request.json) # TODO: validate password constraints
-        new_user.roles.append(role)
+        new_user.add_role(request.json.get("role", "teacher"))
         new_user.save()
 
         response = {
