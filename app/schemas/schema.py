@@ -15,6 +15,6 @@ class Schema(ma.Schema):
     end
 
     def __init__(self, **kwargs):
-        ma.Schema.__init__(self, unknown="exclude")
+        ma.Schema.__init__(self, unknown="exclude", **kwargs)
     end
 end

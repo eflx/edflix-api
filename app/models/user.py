@@ -26,6 +26,14 @@ class User(Model):
         self.set_password(params["password"])
     end
 
+    def __repr__(self):
+        return f"User ({self.email})"
+    end
+
+    def has_password(self, password):
+        return check_password_hash(self.password, password)
+    end
+
     def set_password(self, password):
         self.password = generate_password_hash(password, method="sha256")
     end
@@ -45,16 +53,8 @@ class User(Model):
         return user
     end
 
-    def has_password(self, password):
-        return check_password_hash(self.password, password)
-    end
-
-    def __repr__(self):
-        return f"User ({self.email})"
-    end
-
     def has_role(self, role_name):
-        return role_name in map(lambda role: role.name, self.roles)
+        return role_name in Role.names()
     end
 
     def add_role(self, role_name):
@@ -74,8 +74,8 @@ class User(Model):
         if not title or title.lower() == "uncategorized":
             raise ValueError(f"'{title}' is not an allowed title")
         end
-        
-        new_collection = Collection.new({"title": title}, user=self)
+
+        new_collection = Collection.new(title=title, user=self)
         new_collection.save()
 
         return new_collection

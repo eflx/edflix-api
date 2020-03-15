@@ -7,6 +7,8 @@ from marshmallow import validates_schema
 from marshmallow import ValidationError
 
 class UserSchema(Schema):
+    __envelope__ = "users"
+
     url = ma.URLFor("UsersView:get", id="<id>")
 
     first_name = ma.Str(

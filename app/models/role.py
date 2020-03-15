@@ -13,4 +13,9 @@ class Role(Model):
     def __repr__(self):
         return f"Role ({self.name})"
     end
+
+    @staticmethod
+    def names():
+        return list(map(lambda role: role.name, Role.all()))
+    end
 end

@@ -32,12 +32,12 @@ def test_signup_new_teacher(api):
         "application_id": os.getenv("APPLICATION_ID")
     }
 
-    response_data, status = api.post("users", data=teacher_data)
+    response, status = api.post("users", data=teacher_data)
 
     assert(status == 201)
-    assert("token" in response_data)
-    assert("email" in response_data)
-    assert(response_data["email"] == "pomona.sprout@hogwarts.edu")
+    assert("token" in response)
+    assert("email" in response)
+    assert(response["email"] == "pomona.sprout@hogwarts.edu")
 end
 
 def test_signup_existing_teacher(api):
@@ -50,10 +50,10 @@ def test_signup_existing_teacher(api):
         "application_id": os.getenv("APPLICATION_ID")
     }
 
-    response_data, status = api.post("users", data=teacher_data)
+    response, status = api.post("users", data=teacher_data)
 
     assert(status == 400)
-    assert("exists" in response_data["message"])
+    assert("exists" in response["message"])
 end
 
 required_fields_for_teacher_signup = ["first_name", "last_name", "email", "password", "application_id"]
@@ -90,12 +90,12 @@ def test_signup_school_admin(api):
         "application_id": os.getenv("APPLICATION_ID")
     }
 
-    response_data, status = api.post("users", data=admin_data)
+    response, status = api.post("users", data=admin_data)
 
     assert(status == 201)
-    assert("token" in response_data)
-    assert("email" in response_data)
-    assert(response_data["email"] == "remus.lupin@hogwarts.edu")
+    assert("token" in response)
+    assert("email" in response)
+    assert(response["email"] == "remus.lupin@hogwarts.edu")
 end
 
 required_fields_for_admin_signup = ["first_name", "last_name", "email", "password", "school_name", "school_address", "application_id"]

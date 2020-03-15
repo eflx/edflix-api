@@ -5,7 +5,6 @@ import json
 from app import db
 
 from sqlalchemy.orm import class_mapper
-from marshmallow import ValidationError
 
 from app.schemas import schemas
 
@@ -32,13 +31,12 @@ class Model(db.Model):
     end
 
     @classmethod
-    def new(cls, model_params, **extra_params):
+    def new(cls, **params):
         if not cls.__name__ in schemas:
             raise Exception(f"No schema is defined for class {cls.__name__}")
         end
 
-        params = schemas[cls.__name__].load(model_params)
-        params.update(extra_params)
+        model_params = schemas[cls.__name__].load(params)
 
         # filter out the params that are not part of the class model
         # (otherwise you'll get 'xyz' is an invalid argument for cls).
@@ -46,11 +44,11 @@ class Model(db.Model):
         # them in the view
         model_attributes = class_mapper(cls).attrs.keys()
 
-        params = {
-            k: v for k, v in params.items() if k in model_attributes
+        model_params = {
+            k: v for k, v in model_params.items() if k in model_attributes
         }
 
-        return cls(**params)
+        return cls(**model_params)
     end
 
     def update(self, params, force_save=True):
