@@ -15,7 +15,7 @@ from app.models import Role
 def test_add_invalid_role(user):
     user.add_role("mugwump")
 
-    assert("mugwump" not in Role.names())
+    assert("mugwump" not in user.role_names())
 end
 
 def test_add_existing_role(user):
@@ -28,5 +28,5 @@ def test_add_valid_role(user):
     user.add_role("school-admin")
 
     assert(len(user.roles) == 2)
-    assert("school-admin" in Role.names())
+    assert("school-admin" in user.role_names())
 end

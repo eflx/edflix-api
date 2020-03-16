@@ -53,8 +53,12 @@ class User(Model):
         return user
     end
 
+    def role_names(self):
+        return list(map(lambda role: role.name, self.roles))
+    end
+
     def has_role(self, role_name):
-        return role_name in Role.names()
+        return role_name in self.role_names()
     end
 
     def add_role(self, role_name):
@@ -70,14 +74,27 @@ class User(Model):
         self.save()
     end
 
+    def is_teacher(self):
+        return self.has_role("teacher")
+    end
+
+    def has_collection(self, title):
+        return title in map(lambda collection: collection.title, self.collections)
+    end
+
     def create_collection(self, title):
-        if not title or title.lower() == "uncategorized":
-            raise ValueError(f"'{title}' is not an allowed title")
-        end
+        new_collection = Collection.new(title=title)
 
-        new_collection = Collection.new(title=title, user=self)
-        new_collection.save()
+        return self.add_collection(new_collection)
+    end
 
-        return new_collection
+    def add_collection(self, collection):
+        collection.user = self
+
+        # can save a collection only if the owner
+        # has an id (i.e., is already saved)
+        collection.save() if self.id else None
+
+        return collection
     end
 end

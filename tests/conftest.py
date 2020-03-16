@@ -74,7 +74,12 @@ end
 def auth(api):
     auth_response, _ = api.post("auth/token", data={ "email": "albus.dumbledore@hogwarts.edu", "password": "P@55w0rd" })
 
-    yield auth_response
+    return auth_response
+end
+
+@pytest.fixture(scope="function")
+def auth_header(auth):
+    return { "Authorization": f"Bearer {auth['token']}" }
 end
 
 @pytest.fixture(scope="module")

@@ -52,6 +52,7 @@ class UsersView(View):
     def post(self):
         new_user = User.new(**request.json) # TODO: validate password constraints
         new_user.add_role(request.json.get("role", "teacher"))
+        new_user.create_collection("Uncategorized")
         new_user.save()
 
         response = {

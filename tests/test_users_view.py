@@ -6,6 +6,8 @@ import pytest
 
 from time import time
 
+from app.models import User
+
 def test_get_all_users(api):
     error, status = api.get("users")
 
@@ -34,10 +36,14 @@ def test_signup_new_teacher(api):
 
     response, status = api.post("users", data=teacher_data)
 
+    user = User.one(email="pomona.sprout@hogwarts.edu")
+
     assert(status == 201)
     assert("token" in response)
     assert("email" in response)
     assert(response["email"] == "pomona.sprout@hogwarts.edu")
+    assert(user.is_teacher())
+    assert(user.has_collection("Uncategorized"))
 end
 
 def test_signup_existing_teacher(api):

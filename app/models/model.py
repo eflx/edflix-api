@@ -48,7 +48,16 @@ class Model(db.Model):
             k: v for k, v in model_params.items() if k in model_attributes
         }
 
-        return cls(**model_params)
+        # add the new object to the session so that when dependent
+        # objects are similarly created, they, too, are added to
+        # the same session so they can be committed together. if
+        # this is not done, then saving one object might result in
+        # an error because a dependent object hasn't been saved yet
+        new_object = cls(**model_params)
+
+        db.session.add(new_object)
+
+        return new_object
     end
 
     def update(self, params, force_save=True):
