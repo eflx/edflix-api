@@ -30,13 +30,13 @@ class CollectionsView(AuthenticatedView):
     @route("", methods=["POST"])
     @ensure_json
     def post(self):
-        if not "title" in request.json:
+        title = request.json.get("title")
+
+        if not title or not title.strip():
             return self.error(400, "Title is required")
         end
 
-        title = request.json["title"]
-
-        if not title or title.lower() == "uncategorized":
+        if title.lower() == "uncategorized":
             return self.error(400, f"Title '{title}' is not allowed")
         end
 
