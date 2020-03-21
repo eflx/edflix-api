@@ -40,6 +40,10 @@ class CollectionsView(AuthenticatedView):
             return self.error(400, f"Title '{title}' is not allowed")
         end
 
+        if request.user.has_collection(title):
+            return self.error(400, f"Collection '{title}' already exists")
+        end
+
         new_collection = Collection.new(**request.json)
 
         request.user.add_collection(new_collection)

@@ -79,7 +79,7 @@ class User(Model):
     end
 
     def has_collection(self, title):
-        return title in map(lambda collection: collection.title, self.collections)
+        return title.lower() in map(lambda collection: collection.title.lower(), self.collections)
     end
 
     def create_collection(self, title):

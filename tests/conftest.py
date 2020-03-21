@@ -12,7 +12,10 @@ import pytest
 
 from app import create_app
 from app import db as database
-from app.models import User, Role
+
+from app.models import User
+from app.models import Role
+from app.models import Collection
 
 from tests.api import API
 
@@ -59,6 +62,9 @@ def db():
     for teacher in [dumbledore, mcgonagall, flitwick, lockhart]:
         teacher.save()
     end
+
+    transfiguration_collection = Collection(title="Transfiguration", user=dumbledore)
+    transfiguration_collection.save()
 
     yield database
 
