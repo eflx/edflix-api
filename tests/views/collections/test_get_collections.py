@@ -13,4 +13,6 @@ def test_get_collections(api, auth_header):
 
     assert(status == 200)
     assert("collections" in response)
+    assert(len(response["collections"]) == 2) # the default "Uncategorized",
+    # and "Transfiguration"
 end

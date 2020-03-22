@@ -54,6 +54,8 @@ class UserSchema(Schema):
         error_messages={ "required": "Application id is required" }
     )
 
+    collections = ma.URLFor("CollectionsView:index")
+
     @validates_schema
     def ensure_unique_email(self, data, **kwargs):
         from app.models import User

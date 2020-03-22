@@ -61,10 +61,10 @@ def db():
 
     for teacher in [dumbledore, mcgonagall, flitwick, lockhart]:
         teacher.save()
+        teacher.create_collection("Uncategorized")
     end
 
-    transfiguration_collection = Collection(title="Transfiguration", user=dumbledore)
-    transfiguration_collection.save()
+    dumbledore.create_collection("Transfiguration")
 
     yield database
 
