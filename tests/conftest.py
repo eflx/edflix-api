@@ -94,3 +94,11 @@ def user(test_client, db):
 
     return user
 end
+
+@pytest.fixture(scope="module")
+def collection(test_client, db):
+    # use the Transfiguration collection for the Dumbledore user (id 1)
+    collection = Collection.one(user_id=1, title="Transfiguration")
+
+    return collection
+end
