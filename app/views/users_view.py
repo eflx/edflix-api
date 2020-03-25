@@ -54,8 +54,10 @@ class UsersView(View):
         new_user.add_role(request.json.get("role", "teacher"))
         new_user.save()
 
-        for collection in ["Uncategorized"] + request.json.get("subjects", []):
-            new_user.create_collection(collection)
+        for title in ["Uncategorized"] + request.json.get("subjects", []):
+            if title.strip():
+                new_user.create_collection(title)
+            end
         end
 
         response = {

@@ -34,7 +34,7 @@ def test_signup_new_teacher_with_subjects(api):
         "email": "cuthbert.binns@hogwarts.edu",
         "password": "P@55w0rd",
         "role": "teacher",
-        "subjects": ["Goblin Rebellions", "Giant Wars"],
+        "subjects": ["Goblin Rebellions", "", "Giant Wars"],
         "application_id": os.getenv("APPLICATION_ID")
     }
 
