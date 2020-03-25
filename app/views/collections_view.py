@@ -12,6 +12,7 @@ from app.schemas import CollectionSchema
 from app.decorators import validate_params
 from app.decorators import ensure_json
 from app.decorators import auth_required
+from app.decorators import collection_required
 
 from app.lib import auth
 
@@ -28,18 +29,9 @@ class CollectionsView(ProtectedView):
     end
 
     @route("/<id>", methods=["GET"])
+    @collection_required
     def get(self, id):
-        collection = Collection.get(id)
-
-        if collection is None:
-            return self.error(404, f"Collection was not found")
-        end
-
-        if collection.user != request.user:
-            return self.error(403, f"User mismatch")
-        end
-
-        return collection_schema.jsonify(collection)
+        return collection_schema.jsonify(request.collection)
     end
 
     @route("", methods=["POST"])
@@ -55,27 +47,31 @@ class CollectionsView(ProtectedView):
 
     @route("/<id>", methods=["PUT", "PATCH"])
     @validate_params
+    @collection_required
     @ensure_json
     def put(self, id):
         params = collection_schema.load(request.json)
 
-        collection = Collection.get(id)
-
-        if collection is None:
-            return self.error(404, f"Collection was not found")
-        end
-
-        if collection.user != request.user:
-            return self.error(403, f"User mismatch")
-        end
-
-        if collection.title.lower() == "uncategorized":
+        if request.collection.title.lower() == "uncategorized":
             return self.error(400, "Renaming this collection is not allowed")
         end
 
-        collection.title = params["title"]
-        collection.save()
+        request.collection.title = params["title"]
+        request.collection.save()
 
-        return collection_schema.jsonify(collection)
+        return collection_schema.jsonify(request.collection)
+    end
+
+    @route("/<id>", methods=["DELETE"])
+    @collection_required
+    @ensure_json
+    def delete(self, id):
+        if request.collection.title.lower() == "uncategorized":
+            return self.error(400, "Deleting this collection is not allowed")
+        end
+
+        request.collection.delete()
+
+        return jsonify({}), 204
     end
 end

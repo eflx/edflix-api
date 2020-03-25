@@ -24,7 +24,7 @@ def auth_required(f):
         request.user = auth.get_user(auth_header[1])
 
         if not request.user:
-            return ({ "code": 401, "message": "Not authorized" }), 401
+            return jsonify({ "code": 401, "message": "Not authorized" }), 401
         end
 
         return f(*args, **kwargs)

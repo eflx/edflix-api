@@ -15,9 +15,9 @@ class API:
     end
 
     def call(self, method, uri, data=None, headers=None):
-        op = self.operations.get(method) or self.operations["get"]
+        op = self.operations.get(method.lower()) or self.operations["get"]
 
-        all_headers = {} if method in ["get", "delete"] else { "Content-Type": "application/json" }
+        all_headers = {} if method.lower() == "get" else { "Content-Type": "application/json" }
 
         if headers:
             for key in headers:
