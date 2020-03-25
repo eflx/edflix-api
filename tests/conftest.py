@@ -64,6 +64,7 @@ def db():
         teacher.create_collection("Uncategorized")
     end
 
+    flitwick.create_collection("Charms")
     dumbledore.create_collection("Transfiguration")
 
     yield database
@@ -99,6 +100,14 @@ end
 def collection(test_client, db):
     # use the Transfiguration collection for the Dumbledore user (id 1)
     collection = Collection.one(user_id=1, title="Transfiguration")
+
+    return collection
+end
+
+@pytest.fixture(scope="module")
+def uncategorized_collection(test_client, db):
+    # use the Uncategorized collection for the Dumbledore user (id=1)
+    collection = Collection.one(user_id=1, title="Uncategorized")
 
     return collection
 end

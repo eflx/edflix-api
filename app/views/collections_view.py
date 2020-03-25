@@ -69,6 +69,10 @@ class CollectionsView(ProtectedView):
             return self.error(403, f"User mismatch")
         end
 
+        if collection.title.lower() == "uncategorized":
+            return self.error(400, "Renaming this collection is not allowed")
+        end
+
         collection.title = params["title"]
         collection.save()
 
