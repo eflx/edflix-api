@@ -27,6 +27,31 @@ def test_signup_new_teacher(api):
     assert(user.has_collection("Uncategorized"))
 end
 
+def test_signup_new_teacher_with_subjects(api):
+    teacher_data = {
+        "first_name": "Cuthbert",
+        "last_name": "Binns",
+        "email": "cuthbert.binns@hogwarts.edu",
+        "password": "P@55w0rd",
+        "role": "teacher",
+        "subjects": ["Goblin Rebellions", "Giant Wars"],
+        "application_id": os.getenv("APPLICATION_ID")
+    }
+
+    response, status = api.post("users", data=teacher_data)
+
+    user = User.one(email="cuthbert.binns@hogwarts.edu")
+
+    assert(status == 201)
+    assert("token" in response)
+    assert("email" in response)
+    assert(response["email"] == "cuthbert.binns@hogwarts.edu")
+    assert(user.is_teacher())
+    assert(user.has_collection("Uncategorized"))
+    assert(user.has_collection("Goblin Rebellions"))
+    assert(user.has_collection("Giant Wars"))
+end
+
 def test_signup_existing_teacher(api):
     teacher_data = {
         "first_name": "Albus",

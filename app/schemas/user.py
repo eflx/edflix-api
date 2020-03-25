@@ -35,7 +35,7 @@ class UserSchema(Schema):
         error_messages={ "required": "Password is required" }
     )
 
-    subjects = ma.Str(load_only=True)
+    subjects = ma.List(ma.Str(), load_only=True)
 
     role = ma.Str(
         load_only=True,

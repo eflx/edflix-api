@@ -52,8 +52,11 @@ class UsersView(View):
     def post(self):
         new_user = User.new(**request.json) # TODO: validate password constraints
         new_user.add_role(request.json.get("role", "teacher"))
-        new_user.create_collection("Uncategorized")
         new_user.save()
+
+        for collection in ["Uncategorized"] + request.json.get("subjects", []):
+            new_user.create_collection(collection)
+        end
 
         response = {
             "token": auth.get_token(new_user, expires_in=24*60*60), # 1 day
