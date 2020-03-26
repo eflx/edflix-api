@@ -52,11 +52,19 @@ class CollectionsView(ProtectedView):
     def put(self, id):
         params = collection_schema.load(request.json)
 
+        # can't rename the Uncategorized collection...
         if request.collection.title.lower() == "uncategorized":
             return self.error(400, "Renaming this collection is not allowed")
         end
 
-        request.collection.title = params["title"]
+        title = params["title"]
+
+        # ..., and can't rename TO 'Uncategorized' either
+        if title.lower() == "uncategorized":
+            return self.error(400, f"Collection '{title}' already exists")
+        end
+
+        request.collection.title = title
         request.collection.save()
 
         return collection_schema.jsonify(request.collection)

@@ -24,7 +24,7 @@ class CollectionSchema(Schema):
         title = data["title"]
 
         if not title or not title.strip():
-            raise ValidationError("Title is required")
+            raise ValidationError("Collection title is required")
         end
     end
 
@@ -32,12 +32,11 @@ class CollectionSchema(Schema):
     def ensure_title_is_not_uncategorized(self, data, **kwargs):
         title = data["title"]
 
-        # only validate if there's an active request, and there's
-        # a user in that request. this means that the call is being
-        # made to the API to create a collection
-        if request and hasattr(request, "user"):
+        # only validate if there's an API request to create the
+        # Uncategorized collection
+        if request and request.endpoint == "CollectionsView:post":
             if title.lower() == "uncategorized":
-                raise ValidationError(f"Title '{title}' is not allowed")
+                raise ValidationError(f"Collection '{title}' cannot be created")
             end
         end
     end
@@ -46,7 +45,10 @@ class CollectionSchema(Schema):
     def ensure_collection_doesnt_exist(self, data, **kwargs):
         title = data["title"]
 
-        if request and hasattr(request, "user"):
+        # only validate if there's an API request to create a
+        # a new collection AND the user already has that
+        # collection
+        if request and request.endpoint == "CollectionsView:post" and hasattr(request, "user"):
             if request.user.has_collection(title):
                 raise ValidationError(f"Collection '{title}' already exists")
             end

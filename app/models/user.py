@@ -79,13 +79,27 @@ class User(Model):
     end
 
     def has_collection(self, title):
-        return title.lower() in map(lambda collection: collection.title.lower(), self.collections)
+        return title.strip().lower() in map(lambda collection: collection.title.lower(), self.collections)
     end
 
     def create_collection(self, title):
-        new_collection = Collection.new(title=title)
+        new_collection = Collection.new(title=title.strip())
 
         return self.add_collection(new_collection)
+    end
+
+    def create_collections(self, titles):
+        if titles is None:
+            return
+        end
+
+        titles = [title.strip() for title in set(titles) if title]
+
+        for title in titles:
+            if not self.has_collection(title):
+                self.create_collection(title)
+            end
+        end
     end
 
     def add_collection(self, collection):

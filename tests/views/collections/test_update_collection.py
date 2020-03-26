@@ -79,6 +79,20 @@ def test_update_uncategorized_collection(api, uncategorized_collection, auth_hea
     assert("not allowed" in error["message"])
 end
 
+def test_update_collection_by_changing_case(api, collection, auth_header):
+    collection_data = {
+        "title": "TrAnSfiGuRaTiOn"
+    }
+
+    response, status = api.put(f"collections/{collection.id}", data=collection_data, headers=auth_header)
+
+    assert(status == 200)
+    assert("id" in response)
+    assert("url" in response)
+    assert("title" in response)
+    assert(response["title"] == "TrAnSfiGuRaTiOn")
+end
+
 def test_update_collection(api, collection, auth_header):
     collections_data = {
         "title": "Arithmancy"
